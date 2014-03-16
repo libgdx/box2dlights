@@ -23,7 +23,7 @@ Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android
 This library offer easy way to add soft dynamic 2d lights to your physic based game. Rendering use libgdx but it would be easy to port this to other frameworks or pure openGl too.
 
 ## Usage
- * Download the [latest box2dlights release](http://libgdx.badlogicgames.com/box2dlights/)
+ * Download the [latest Box2DLights release](http://libgdx.badlogicgames.com/box2dlights/)
  * Add the box2dlights.jar file to your libgdx core project's classpath
  * Check out the [Wiki](https://github.com/libgdx/box2dlights/wiki)
 
