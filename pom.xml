@@ -49,6 +49,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+<!-- 		<gdx.version>1.0-SNAPSHOT</gdx.version> -->
 		<gdx.version>0.9.9</gdx.version>
 	</properties>
 
@@ -89,13 +90,14 @@
 			<artifactId>gdx</artifactId>
 			<version>${gdx.version}</version>
 			<scope>compile</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.badlogicgames.gdx</groupId>
 			<artifactId>gdx-platform</artifactId>
 			<classifier>natives-desktop</classifier>
 			<version>${gdx.version}</version>
-			<scope>compile</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.badlogicgames.gdx</groupId>
