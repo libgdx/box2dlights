@@ -27,7 +27,13 @@ This library offer easy way to add soft dynamic 2d lights to your physic based g
  * Add the box2dlights.jar file to your libgdx core project's classpath
  * Check out the [Wiki](https://github.com/libgdx/box2dlights/wiki)
 
-Box2DLights is also available in Maven Central.
+Box2DLights is also available in Maven Central. Add the following dependency to your libgdx core project:
+
+   <dependency>
+      <groupId>com.badlogicgames.box2dlights</groupId>
+      <artifactId>box2dlights</artifactId>
+      <version>1.1</version>
+   </dependency>
 
 ## Maintenance Note
 Box2dlights was moved from Google Code to Github to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
