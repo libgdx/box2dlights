@@ -1,4 +1,4 @@
-FEATURES:
+  FEATURES:
  * Arbitrary number of lights
  * Gaussian blurred light maps
  * Point light
