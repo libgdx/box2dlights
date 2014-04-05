@@ -129,8 +129,8 @@ public class DirectionalLight extends Light {
 			segments[size++] = colorF;
 			segments[size++] = 1f;
 
-			segments[size++] = mx[i] + softShadowLenght * cos;
-			segments[size++] = my[i] + softShadowLenght * sin;
+			segments[size++] = mx[i] + softShadowLength * cos;
+			segments[size++] = my[i] + softShadowLength * sin;
 			segments[size++] = zero;
 			segments[size++] = 1f;
 		}

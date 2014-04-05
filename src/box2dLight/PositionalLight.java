@@ -86,7 +86,7 @@ public abstract class PositionalLight extends Light {
 		}
 
 		if (rayHandler.culling) {
-			culled = ((!rayHandler.intersect(start.x, start.y, distance + softShadowLenght)));
+			culled = ((!rayHandler.intersect(start.x, start.y, distance + softShadowLength)));
 			if (culled) return;
 		}
 
@@ -134,8 +134,8 @@ public abstract class PositionalLight extends Light {
 			segments[size++] = colorF;
 			final float s = (1 - f[i]);
 			segments[size++] = s;
-			segments[size++] = mx[i] + s * softShadowLenght * cos[i];
-			segments[size++] = my[i] + s * softShadowLenght * sin[i];
+			segments[size++] = mx[i] + s * softShadowLength * cos[i];
+			segments[size++] = my[i] + s * softShadowLength * sin[i];
 			segments[size++] = zero;
 			segments[size++] = 0f;
 		}
