@@ -19,7 +19,7 @@ public abstract class Light {
 	protected boolean soft = true;
 	protected boolean xray = false;
 	protected boolean staticLight = false;
-	protected float softShadowLenght = 2.5f;
+	protected float softShadowLength = 2.5f;
 
 	protected RayHandler rayHandler;
 	protected boolean culled = false;
@@ -286,17 +286,17 @@ public abstract class Light {
 	 * 
 	 * @return
 	 */
-	public final float getSoftShadowLenght() {
-		return softShadowLenght;
+	public final float getSoftShadowLength() {
+		return softShadowLength;
 	}
 
 	/**
 	 * set how much is softness used in tip of the beams. default 2.5
 	 * 
-	 * @param softShadowLenght
+	 * @param softShadowLength
 	 */
-	public final void setSoftnessLenght(float softShadowLenght) {
-		this.softShadowLenght = softShadowLenght;
+	public final void setSoftnessLength(float softShadowLength) {
+		this.softShadowLength = softShadowLength;
 		if (staticLight)
 			staticUpdate();
 	}
