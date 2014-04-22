@@ -49,7 +49,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<!-- 		<gdx.version>1.0-SNAPSHOT</gdx.version> -->
 		<gdx.version>1.0.0</gdx.version>
 	</properties>
 
