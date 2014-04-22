@@ -32,7 +32,7 @@ Box2DLights is also available in Maven Central. Add the following dependency to 
     <dependency>
       <groupId>com.badlogicgames.box2dlights</groupId>
       <artifactId>box2dlights</artifactId>
-      <version>1.1</version>
+      <version>1.2</version>
     </dependency>
     
 If you use Gradle, add the following dependency to your build.gradle file, in the dependencies block of the core project:
