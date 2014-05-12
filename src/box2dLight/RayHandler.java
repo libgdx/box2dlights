@@ -29,6 +29,12 @@ public class RayHandler implements Disposable {
 
 	World world;
 	ShaderProgram lightShader;
+	
+	boolean customViewport = false;
+	int customViewportX;
+	int customViewportY;
+	int customViewportWidth;
+	int customViewportHeight;
 
 	/**
 	 * @param combined
@@ -244,6 +250,7 @@ public class RayHandler implements Disposable {
 
 		if (shadows || blur) {
 			lightMap.frameBuffer.end();
+			restoreCustomViewport();
 			lightMap.render();
 		}
 
@@ -450,6 +457,33 @@ public class RayHandler implements Disposable {
 	 */
 	public static void useDiffuseLight(boolean useDiffuse) {
 		isDiffuse = useDiffuse;
+	}
+
+	/**
+	 * Enables use of custom GL viewport and specifies it's position and size
+	 * 
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 */
+	public void useCustomViewport(int x, int y, int width, int height) {
+		customViewport = true;
+		customViewportX = x;
+		customViewportY = y;
+		customViewportWidth = width;
+		customViewportHeight = height;
+	}
+	
+	/**
+	 * Sets the GL viewport to the custom values if they were specified
+	 */
+	public void restoreCustomViewport() {
+		if (!customViewport) return;
+		
+		Gdx.gl.glViewport(
+				customViewportX, customViewportY,
+				customViewportWidth, customViewportHeight);
 	}
 
 	/**

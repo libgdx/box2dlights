@@ -102,7 +102,7 @@ class LightMap {
 		}
 
 		Gdx.gl20.glEnable(GL20.GL_BLEND);
-
+		rayHandler.restoreCustomViewport();
 	}
 
 	public LightMap(RayHandler rayHandler, int fboWidth, int fboHeight) {
