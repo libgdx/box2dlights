@@ -99,8 +99,10 @@ class LightMap {
 
 			}
 			frameBuffer.end(
-				customViewportX, customViewportY,
-				customViewportWidth, customViewportHeight);
+				rayHandler.viewportX,
+				rayHandler.viewportY,
+				rayHandler.viewportWidth,
+				rayHandler.viewportHeight);
 		}
 
 		Gdx.gl20.glEnable(GL20.GL_BLEND);
