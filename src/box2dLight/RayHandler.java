@@ -30,11 +30,10 @@ public class RayHandler implements Disposable {
 	World world;
 	ShaderProgram lightShader;
 	
-	boolean customViewport = false;
-	int customViewportX;
-	int customViewportY;
-	int customViewportWidth;
-	int customViewportHeight;
+	int viewportX = 0;
+	int viewportY = 0;
+	int viewportWidth = Gdx.graphics.getWidth();
+	int viewportHeight = Gdx.graphics.getHeight();
 
 	/**
 	 * @param combined
@@ -249,8 +248,9 @@ public class RayHandler implements Disposable {
 		lightShader.end();
 
 		if (shadows || blur) {
-			lightMap.frameBuffer.end();
-			restoreCustomViewport();
+			lightMap.frameBuffer.end(
+				viewportX, viewportY,
+				viewportWidth, viewportHeight);
 			lightMap.render();
 		}
 
@@ -468,22 +468,20 @@ public class RayHandler implements Disposable {
 	 * @param height
 	 */
 	public void useCustomViewport(int x, int y, int width, int height) {
-		customViewport = true;
-		customViewportX = x;
-		customViewportY = y;
-		customViewportWidth = width;
-		customViewportHeight = height;
+		viewportX = x;
+		viewportY = y;
+		viewportWidth = width;
+		viewportHeight = height;
 	}
 	
 	/**
-	 * Sets the GL viewport to the custom values if they were specified
+	 * Sets the GL viewport to the default values
 	 */
-	public void restoreCustomViewport() {
-		if (!customViewport) return;
-		
-		Gdx.gl.glViewport(
-				customViewportX, customViewportY,
-				customViewportWidth, customViewportHeight);
+	public void useDefaultViewport() {
+		viewportX = 0;
+		viewportY = 0;
+		viewportWidth = Gdx.graphics.getWidth();
+		viewportHeight = Gdx.graphics.getHeight();
 	}
 
 	/**
