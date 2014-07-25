@@ -98,11 +98,14 @@ class LightMap {
 				blurShader.end();
 
 			}
-			frameBuffer.end();
+			frameBuffer.end(
+				rayHandler.viewportX,
+				rayHandler.viewportY,
+				rayHandler.viewportWidth,
+				rayHandler.viewportHeight);
 		}
 
 		Gdx.gl20.glEnable(GL20.GL_BLEND);
-
 	}
 
 	public LightMap(RayHandler rayHandler, int fboWidth, int fboHeight) {
