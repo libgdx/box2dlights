@@ -7,12 +7,13 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.RayCastCallback;
+import com.badlogic.gdx.utils.Disposable;
 
 /**
  * @author kalle
  * 
  */
-public abstract class Light {
+public abstract class Light implements Disposable {
 
 	static final Color DefaultColor = new Color(0.75f, 0.75f, 0.5f, 0.75f);
 	private boolean active = true;
@@ -87,10 +88,7 @@ public abstract class Light {
 	 *            intesity
 	 */
 	public void setColor(float r, float g, float b, float a) {
-		color.r = r;
-    color.g = g;
-    color.b = b;
-    color.a = a;
+		color.set(r, g, b, a);
 		colorF = color.toFloatBits();
 		if (staticLight)
 			staticUpdate();
@@ -109,9 +107,8 @@ public abstract class Light {
 	abstract void render();
 
 	public abstract void setDirection(float directionDegree);
-
-	public void remove() {
-		rayHandler.lightList.removeValue(this, false);
+	
+	public void dispose() {
 		lightMesh.dispose();
 		softShadowMesh.dispose();
 	}
