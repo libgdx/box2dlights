@@ -108,6 +108,11 @@ public abstract class Light implements Disposable {
 
 	public abstract void setDirection(float directionDegree);
 	
+	public void remove() {
+		rayHandler.lightList.removeValue(this, false);
+		dispose();
+	}
+	
 	public void dispose() {
 		lightMesh.dispose();
 		softShadowMesh.dispose();
