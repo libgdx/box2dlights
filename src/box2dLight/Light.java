@@ -107,9 +107,13 @@ public abstract class Light implements Disposable {
 	abstract void render();
 
 	public abstract void setDirection(float directionDegree);
-	
+
 	public void remove() {
-		rayHandler.lightList.removeValue(this, false);
+		if (active) {
+			rayHandler.lightList.removeValue(this, false);
+		} else {
+			rayHandler.disabledLights.removeValue(this, false);
+		}
 		dispose();
 	}
 	
