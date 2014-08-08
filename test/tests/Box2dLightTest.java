@@ -2,6 +2,7 @@ package tests;
 
 import java.util.ArrayList;
 
+import box2dLight.ChainLight;
 import box2dLight.Light;
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -17,6 +18,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -126,9 +129,29 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 
 		}
 	//	 new DirectionalLight(rayHandler, 24, new Color(0,0.4f,0,1f), -45);
+		shapeRenderer = new ShapeRenderer();
+		Vector2 v = new Vector2();
+		vertices = new float[28];
+		reversedVertices = new float[28];
+		for (int i = 0; i < 14; i++) {
+			v.set(10, 0).rotate(i * 5 + 135).add(-5, 10);
+			vertices[i * 2] = v.x;
+			vertices[i * 2 + 1] = v.y;
+			reversedVertices[reversedVertices.length - 2 - i * 2] = v.x;
+			reversedVertices[reversedVertices.length - 1 - i * 2] = v.y;
+		}
+
+		new ChainLight(rayHandler, RAYS_PER_BALL, new Color(0, 0.4f, 0, 0.1f), 40,
+				0, 0, vertices);
+		new ChainLight(rayHandler, RAYS_PER_BALL, new Color(0, 0.4f, 0, 0.1f), 40,
+				0, 0, reversedVertices);
 		/** BOX2D LIGHT STUFF END */
 
 	}
+
+  float[] vertices;
+  float[] reversedVertices;
+	ShapeRenderer shapeRenderer;
 
 	@Override
 	public void render() {
@@ -186,6 +209,10 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 				+ "mouse at shadows: " + atShadow + " time used for shadow calculation:" +aika / ++times + "ns" , 0, 20);
 
 		batch.end();
+		shapeRenderer.setProjectionMatrix(camera.combined);
+		shapeRenderer.begin(ShapeType.Line);
+		shapeRenderer.polyline(vertices);
+		shapeRenderer.end();
 
 	}
 
