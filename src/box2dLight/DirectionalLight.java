@@ -199,4 +199,8 @@ public class DirectionalLight extends Light {
 
 	}
 
+	@Override
+	public void setDistance(float dist) {
+	}
+
 }

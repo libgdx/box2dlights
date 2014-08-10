@@ -10,82 +10,123 @@ import com.badlogic.gdx.physics.box2d.RayCastCallback;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
- * @author kalle
+ * Light is data container for all the light parameters. Lights are
+ * automatically added to rayHandler and could be removed by calling
+ * {@link Light#remove()} method. 
  * 
+ * <p>Implements {@link Disposable}
+ * @author kalle_h
  */
 public abstract class Light implements Disposable {
 
 	static final Color DefaultColor = new Color(0.75f, 0.75f, 0.5f, 0.75f);
-	private boolean active = true;
+	static final int MIN_RAYS = 3;
+	
+	protected final RayHandler rayHandler;
+	protected final Color color = new Color();
+	
+	protected boolean active = true;
 	protected boolean soft = true;
 	protected boolean xray = false;
 	protected boolean staticLight = false;
-	protected float softShadowLength = 2.5f;
-
-	protected RayHandler rayHandler;
 	protected boolean culled = false;
+
 	protected int rayNum;
 	protected int vertexNum;
+	
 	protected float distance;
 	protected float direction;
-
-	protected Color color = new Color();
+	protected float colorF;
+	protected float softShadowLength = 2.5f;
+	
 	protected Mesh lightMesh;
 	protected Mesh softShadowMesh;
 
-	protected float colorF;
+	protected float segments[];
+	protected float[] mx;
+	protected float[] my;
+	protected float[] f;
+	protected int m_index = 0;
 
-	final static int MIN_RAYS = 3;
-
-	float segments[];
-	float[] mx;
-	float[] my;
-	float[] f;
-	int m_index = 0;
-
-	public Light(RayHandler rayHandler, int rays, Color color, float directionDegree,
-			float distance) {
+	/** Creates new active light and automatically adds it to the specified
+	 * {@link RayHandler} instance.
+	 * 
+	 * @param rayHandler
+	 *            not null instance of RayHandler
+	 * @param rays
+	 *            number of rays - more rays make light to look more realistic
+	 *            but will decrease performance, can't be less than MIN_RAYS
+	 * @param color
+	 *            light color
+	 * @param directionDegree
+	 *            direction in degrees (if applicable) 
+	 * @param distance
+	 *            light distance (if applicable)
+	 */
+	public Light(RayHandler rayHandler, int rays, Color color,
+			float directionDegree, float distance) {
 
 		rayHandler.lightList.add(this);
 		this.rayHandler = rayHandler;
 		setRayNum(rays);
-		this.direction = directionDegree;
-		distance *= RayHandler.gammaCorrectionParameter;
-		this.distance = distance < 0.01f ? 0.01f : distance;
+		setDirection(directionDegree);
+		setDistance(distance);
 		setColor(color);
 	}
 
+
+	abstract void update();
+
+	abstract void render();
+	
 	/**
-	 * setColor(Color newColor) { rgb set the color and alpha set intesity NOTE:
-	 * you can also use colorless light with shadows(EG 0,0,0,1)
+	 * Sets light distance if applicable
+	 * 
+	 * <p>NOTE: MIN value should be capped to 0.1f meter
+	 */
+	public abstract void setDistance(float dist);
+
+	/**
+	 * Sets light direction if applicable
+	 */
+	public abstract void setDirection(float directionDegree);
+	
+	/**
+	 * Sets light color
+	 * 
+	 * <p>NOTE: you can also use colorless light with shadows (EG 0,0,0,1)
 	 * 
 	 * @param newColor
+	 *            RGB set the color and Alpha set intensity
+	 * 
+	 * @see #setColor(float, float, float, float)
 	 */
 	public void setColor(Color newColor) {
 		if (newColor != null) {
 			color.set(newColor);
-			colorF = color.toFloatBits();
 		} else {
-			color = DefaultColor;
-			colorF = DefaultColor.toFloatBits();
+			color.set(DefaultColor);
 		}
+		colorF = color.toFloatBits();
 		if (staticLight)
 			staticUpdate();
 	}
 
 	/**
-	 * set Color(float r, float g, float b, float a) rgb set the color and alpha
-	 * set intesity NOTE: you can also use colorless light with shadows(EG
-	 * 0,0,0,1)
+	 * Sets light color
+	 * 
+	 * <p>NOTE: you can also use colorless light with shadows (EG 0,0,0,1)
 	 * 
 	 * @param r
-	 *            red
+	 *            lights color red component
 	 * @param g
-	 *            green
+	 *            lights color green component
 	 * @param b
-	 *            blue
+	 *            lights color blue component
 	 * @param a
-	 *            intesity
+	 *            lights shadow intensity
+	 * 
+	 * @see #setColor(Color)
 	 */
 	public void setColor(float r, float g, float b, float a) {
 		color.set(r, g, b, a);
@@ -93,36 +134,38 @@ public abstract class Light implements Disposable {
 		if (staticLight)
 			staticUpdate();
 	}
-
+	
 	/**
-	 * setDistance(float dist) MIN capped to 1cm
-	 * 
-	 * @param dist
+	 * Adds light to specified RayHandler 
 	 */
-	public void setDistance(float dist) {
+	public void add(RayHandler rayHandler) {
+		if (active) {
+			rayHandler.lightList.add(this);
+		} else {
+			rayHandler.disabledLights.add(this);
+		}
 	}
 
-	abstract void update();
-
-	abstract void render();
-
-	public abstract void setDirection(float directionDegree);
-
+	/**
+	 * Removes light from specified RayHandler 
+	 */
 	public void remove() {
 		if (active) {
 			rayHandler.lightList.removeValue(this, false);
 		} else {
 			rayHandler.disabledLights.removeValue(this, false);
 		}
-		dispose();
 	}
-	
+
+	/**
+	 * Disposes all light resources 
+	 */
 	public void dispose() {
 		lightMesh.dispose();
 		softShadowMesh.dispose();
 	}
 
-	/**
+	/** TODO: Stopped here :)
 	 * attach positional light to automatically follow body. Position is fixed
 	 * to given offset
 	 * 
