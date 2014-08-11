@@ -131,24 +131,25 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 	//	 new DirectionalLight(rayHandler, 24, new Color(0,0.4f,0,1f), -45);
 		shapeRenderer = new ShapeRenderer();
 		Vector2 v = new Vector2();
-		vertices = new float[28];
-		reversedVertices = new float[28];
-		for (int i = 0; i < 14; i++) {
-			v.set(10, 0).rotate(i * 5 + 135).add(-5, 10);
+		vertices = new float[6];
+		reversedVertices = new float[6];
+		for (int i = 0; i < 3; i++) {
+			v.set(5, 0).rotate((i * 45) + 100).add(-5, 13);
 			vertices[i * 2] = v.x;
 			vertices[i * 2 + 1] = v.y;
 			reversedVertices[reversedVertices.length - 2 - i * 2] = v.x;
 			reversedVertices[reversedVertices.length - 1 - i * 2] = v.y;
 		}
 
-		new ChainLight(rayHandler, RAYS_PER_BALL, new Color(0, 0.4f, 0, 0.1f), 40,
+		chainLight = new ChainLight(rayHandler, 50, new Color(0, 0.4f, 0, 1f), 40,
 				0, 0, vertices);
-		new ChainLight(rayHandler, RAYS_PER_BALL, new Color(0, 0.4f, 0, 0.1f), 40,
+		chainLightReversed = new ChainLight(rayHandler, 50, new Color(0, 0.4f, 0, 1f), 40,
 				0, 0, reversedVertices);
 		/** BOX2D LIGHT STUFF END */
 
 	}
 
+	ChainLight chainLight, chainLightReversed;
   float[] vertices;
   float[] reversedVertices;
 	ShapeRenderer shapeRenderer;
@@ -161,6 +162,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		// should use fixed step
 
 		boolean stepped = fixedStep(Gdx.graphics.getDeltaTime());
+		Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.setProjectionMatrix(camera.combined);
@@ -209,6 +211,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 				+ "mouse at shadows: " + atShadow + " time used for shadow calculation:" +aika / ++times + "ns" , 0, 20);
 
 		batch.end();
+		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		shapeRenderer.begin(ShapeType.Line);
 		shapeRenderer.polyline(vertices);
