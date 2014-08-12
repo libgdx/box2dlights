@@ -136,7 +136,7 @@ public abstract class PositionalLight extends Light {
 			segments[size++] = s;
 			segments[size++] = mx[i] + s * softShadowLength * cos[i];
 			segments[size++] = my[i] + s * softShadowLength * sin[i];
-			segments[size++] = zero;
+			segments[size++] = zeroColorBits;
 			segments[size++] = 0f;
 		}
 		softShadowMesh.setVertices(segments, 0, size);
