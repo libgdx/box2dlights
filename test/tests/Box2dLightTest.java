@@ -113,7 +113,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		// rayHandler.setCombinedMatrix(camera.combined, camera.position.x,
 		// camera.position.y, camera.viewportWidth * camera.zoom,
 		// camera.viewportHeight * camera.zoom);
-		for (int i = 0; i < BALLSNUM; i++) {
+		for (int i = 0; i < BALLSNUM - 1; i++) {
 			// final Color c = new Color(MathUtils.random()*0.4f,
 			// MathUtils.random()*0.4f,
 			// MathUtils.random()*0.4f, 1f);
@@ -141,9 +141,10 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 			reversedVertices[reversedVertices.length - 1 - i * 2] = v.y;
 		}
 
-		chainLight = new ChainLight(rayHandler, 50, new Color(0, 0.4f, 0, 1f), 40,
+		chainLight = new ChainLight(rayHandler, 50, new Color(0f, 1f, 0f, 0.1f), 30,
 				0, 0, vertices);
-		chainLightReversed = new ChainLight(rayHandler, 50, new Color(0, 0.4f, 0, 1f), 40,
+		chainLight.attachToBody(balls.get(BALLSNUM - 1), 1, 1);
+		chainLightReversed = new ChainLight(rayHandler, 50, new Color(1f, 0f, 0f, 0.5f), 30,
 				0, 0, reversedVertices);
 		/** BOX2D LIGHT STUFF END */
 

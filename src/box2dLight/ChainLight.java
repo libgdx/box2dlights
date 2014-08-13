@@ -8,14 +8,15 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.Pools;
 
 public class ChainLight extends Light {
   private Body body;
-  private float bodyOffsetX;
-  private float bodyOffsetY;
+  private Vector2 bodyPosition = new Vector2();
 
   float[] vertices;
   final float[] startX;
@@ -25,6 +26,8 @@ public class ChainLight extends Light {
   final float endX[];
   final float endY[];
 
+  private float bodyAngle;
+
   /**
    * attach positional light to automatically follow body. Position is fixed to
    * given offset.
@@ -32,8 +35,8 @@ public class ChainLight extends Light {
   @Override
   public void attachToBody(Body body, float offsetX, float offSetY) {
     this.body = body;
-    bodyOffsetX = offsetX;
-    bodyOffsetY = offSetY;
+    this.bodyPosition.set(body.getPosition());
+    bodyAngle = body.getAngle();
     if (staticLight)
       staticUpdate();
   }
@@ -79,18 +82,35 @@ public class ChainLight extends Light {
       staticUpdate();
   }
 
+  private final Matrix3 zeroPosition = new Matrix3(),
+      rotateAroundZero = new Matrix3(), restorePosition = new Matrix3();
+  private final Vector2 tmpVec = new Vector2();
+
   @Override
   void update() {
     if (body != null && !staticLight) {
-      final Vector2 vec = body.getPosition();
-      float angle = body.getAngle();
-      final float cos = MathUtils.cos(angle);
-      final float sin = MathUtils.sin(angle);
-      final float dX = bodyOffsetX * cos - bodyOffsetY * sin;
-      final float dY = bodyOffsetX * sin + bodyOffsetY * cos;
-      tmpPosition.x = vec.x + dX;
-      tmpPosition.y = vec.y + dY;
 
+      final Vector2 vec = body.getPosition();
+      tmpVec.set(0, 0).sub(bodyPosition);
+      bodyPosition.set(vec);
+      zeroPosition.setToTranslation(tmpVec);
+      restorePosition.setToTranslation(bodyPosition);
+
+      rotateAroundZero.setToRotationRad(bodyAngle).inv()
+          .rotateRad(body.getAngle());
+      bodyAngle = body.getAngle();
+
+      for (int i = 0; i < rayNum; i++) {
+        tmpVec.set(startX[i], startY[i]).mul(zeroPosition)
+            .mul(rotateAroundZero).mul(restorePosition);
+        startX[i] = tmpVec.x;
+        startY[i] = tmpVec.y;
+
+        tmpVec.set(endX[i], endY[i]).mul(zeroPosition).mul(rotateAroundZero)
+            .mul(restorePosition);
+        endX[i] = tmpVec.x;
+        endY[i] = tmpVec.y;
+      }
     }
 
     if (rayHandler.culling) {
@@ -151,8 +171,8 @@ public class ChainLight extends Light {
       final float s = (1 - f[i]);
       segments[size++] = s;
 
-      tmpPerp.set(perpX[i], perpY[i]).scl(softShadowLength * s)
-          .add(mx[i], my[i]);
+      tmpPerp.set(mx[i], my[i]).sub(startX[i], startY[i]).nor()
+          .scl(softShadowLength * s).add(mx[i], my[i]);
       segments[size++] = tmpPerp.x;
       segments[size++] = tmpPerp.y;
       segments[size++] = zero;
@@ -171,7 +191,8 @@ public class ChainLight extends Light {
         vertexNum);
     if (soft && !xray) {
       softShadowMesh.render(rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0,
-          (vertexNum - 1) * 2);
+          vertexNum);
+      // (vertexNum - 1) * 2);
     }
   }
 
@@ -214,11 +235,12 @@ public class ChainLight extends Light {
     Spinor previousAngle = Pools.obtain(Spinor.class);
     Spinor currentAngle = Pools.obtain(Spinor.class);
     Spinor nextAngle = Pools.obtain(Spinor.class);
-    // following Spinors used to represent start, end and interpolated ray angles for a given segment
+    // following Spinors used to represent start, end and interpolated ray
+    // angles for a given segment
     Spinor startAngle = Pools.obtain(Spinor.class);
     Spinor endAngle = Pools.obtain(Spinor.class);
     Spinor rayAngle = Pools.obtain(Spinor.class);
-    
+
     int segmentCount = vertices.length / 2 - 1;
 
     float[] segmentAngles = new float[segmentCount];
@@ -233,35 +255,37 @@ public class ChainLight extends Light {
       remainingLength += segmentLengths[j];
     }
 
-
     int rayNumber = 0;
     int remainingRays = rayNum;
-    
+
     for (int i = 0; i < segmentCount; i++) {
-      
+
       // get this and adjacent segment angles
-      previousAngle.set(i == 0 ? segmentAngles[i] : segmentAngles[i-1]);
+      previousAngle.set(i == 0 ? segmentAngles[i] : segmentAngles[i - 1]);
       currentAngle.set(segmentAngles[i]);
-      nextAngle.set(i == segmentAngles.length - 1 ? segmentAngles[i] : segmentAngles[i + 1]);
-      
+      nextAngle.set(i == segmentAngles.length - 1 ? segmentAngles[i]
+          : segmentAngles[i + 1]);
+
       // interpolate to find actual start and end angles
       startAngle.set(previousAngle).lerp(currentAngle, 0.5f, tmpAngle);
       endAngle.set(currentAngle).lerp(nextAngle, 0.5f, tmpAngle);
-      
+
       int segmentVertex = i * 2;
       vSegmentStart.set(vertices[segmentVertex], vertices[segmentVertex + 1]);
-      vDirection.set(vertices[segmentVertex + 2], vertices[segmentVertex + 3]).sub(vSegmentStart).nor();
+      vDirection.set(vertices[segmentVertex + 2], vertices[segmentVertex + 3])
+          .sub(vSegmentStart).nor();
 
       float raySpacing = remainingLength / remainingRays;
-      
-      int segmentRays = i == segmentCount - 1 ? remainingRays :
-          (int)((segmentLengths[i] / remainingLength) * remainingRays);
-      
+
+      int segmentRays = i == segmentCount - 1 ? remainingRays
+          : (int) ((segmentLengths[i] / remainingLength) * remainingRays);
+
       for (int j = 0; j < segmentRays; j++) {
         float position = j * raySpacing;
-        
+
         // interpolate ray angle based on position within segment
-        rayAngle.set(startAngle).lerp(endAngle, position/segmentLengths[i], tmpAngle);
+        rayAngle.set(startAngle).lerp(endAngle, position / segmentLengths[i],
+            tmpAngle);
         v1.set(vDirection).scl(position).add(vSegmentStart);
 
         this.startX[rayNumber] = v1.x;
@@ -273,8 +297,8 @@ public class ChainLight extends Light {
       }
 
       remainingRays -= segmentRays;
-      remainingLength -= segmentLengths[i]; 
-      
+      remainingLength -= segmentLengths[i];
+
     }
 
     Pools.free(v1);
