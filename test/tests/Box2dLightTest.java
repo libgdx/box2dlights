@@ -130,29 +130,27 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		}
 	//	 new DirectionalLight(rayHandler, 24, new Color(0,0.4f,0,1f), -45);
 		shapeRenderer = new ShapeRenderer();
-		Vector2 v = new Vector2();
-		vertices = new float[6];
-		reversedVertices = new float[6];
-		for (int i = 0; i < 3; i++) {
-			v.set(5, 0).rotate((i * 45) + 100).add(-5, 13);
-			vertices[i * 2] = v.x;
-			vertices[i * 2 + 1] = v.y;
-			reversedVertices[reversedVertices.length - 2 - i * 2] = v.x;
-			reversedVertices[reversedVertices.length - 1 - i * 2] = v.y;
-		}
 
-		chainLight = new ChainLight(rayHandler, 50, new Color(0f, 1f, 0f, 0.1f), 30,
-				0, 0, vertices);
-		chainLight.attachToBody(balls.get(BALLSNUM - 1), 1, 1);
-		chainLightReversed = new ChainLight(rayHandler, 50, new Color(1f, 0f, 0f, 0.5f), 30,
-				0, 0, reversedVertices);
+    chainLight = new ChainLight(rayHandler, 50, null, 30,
+        0, 0, new float[]{0, 5, -3, 10, 0, 15});
+    
+    chainLight2 = new ChainLight(rayHandler, 50, null, 30,
+        0, 0, new float[]{0, 5, -3, 10, 0, 15});
+    
+    chainLight.setColor(MathUtils.random(), MathUtils.random(),
+        MathUtils.random(), 1f);
+    chainLight.setColor(MathUtils.random(), MathUtils.random(),
+        MathUtils.random(), 1f);
+
+    Body body = balls.get(BALLSNUM - 1);
+    body.setTransform(0, 10, 0);
+    chainLight2.attachToBody(body, 1, 1);
+		
 		/** BOX2D LIGHT STUFF END */
 
 	}
 
-	ChainLight chainLight, chainLightReversed;
-  float[] vertices;
-  float[] reversedVertices;
+	ChainLight chainLight, chainLight2;
 	ShapeRenderer shapeRenderer;
 
 	@Override
@@ -215,7 +213,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		shapeRenderer.setColor(Color.WHITE);
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		shapeRenderer.begin(ShapeType.Line);
-		shapeRenderer.polyline(vertices);
+		shapeRenderer.polyline(chainLight.chain.items, 0, chainLight.chain.size);
 		shapeRenderer.end();
 
 	}
@@ -339,12 +337,18 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 
 	@Override
 	public boolean touchDragged(int x, int y, int pointer) {
+    camera.unproject(testPoint.set(x, y, 0));
+    float delta = testPoint.x - target.x;
+    chainLight.chain.items[2] = Math.max(-5f, Math.min(chainLight.chain.items[2] + delta, 5f));
+    delta = testPoint.y - target.y;
+    chainLight.chain.items[3] = Math.max(5f, Math.min(chainLight.chain.items[3] + delta, 15f));
+    chainLight.updateChain();
+    target.set(testPoint.x, testPoint.y);
 		// if a mouse joint exists we simply update
 		// the target of the joint based on the new
 		// mouse coordinates
 		if (mouseJoint != null) {
-			camera.unproject(testPoint.set(x, y, 0));
-			mouseJoint.setTarget(target.set(testPoint.x, testPoint.y));
+			mouseJoint.setTarget(target);
 		}
 		return false;
 	}
