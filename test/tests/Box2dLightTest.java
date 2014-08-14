@@ -135,22 +135,27 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
         0, 0, new float[]{0, 5, -3, 10, 0, 15});
     
     chainLight2 = new ChainLight(rayHandler, 50, null, 30,
-        0, 0, new float[]{0, 5, -3, 10, 0, 15});
+        0, 0, new float[]{0, 15, -3, 10, 0, 5});
     
+    chainLight3 = new ChainLight(rayHandler, 50, null, 30,
+        0, 0, new float[]{0, 5, -3, 10, 0, 15});
+
     chainLight.setColor(MathUtils.random(), MathUtils.random(),
         MathUtils.random(), 1f);
-    chainLight.setColor(MathUtils.random(), MathUtils.random(),
+    chainLight2.setColor(MathUtils.random(), MathUtils.random(),
+        MathUtils.random(), 1f);
+    chainLight3.setColor(MathUtils.random(), MathUtils.random(),
         MathUtils.random(), 1f);
 
     Body body = balls.get(BALLSNUM - 1);
     body.setTransform(0, 10, 0);
-    chainLight2.attachToBody(body, 1, 1);
+    chainLight3.attachToBody(body, 1, 1);
 		
 		/** BOX2D LIGHT STUFF END */
 
 	}
 
-	ChainLight chainLight, chainLight2;
+	ChainLight chainLight, chainLight2, chainLight3;
 	ShapeRenderer shapeRenderer;
 
 	@Override
@@ -339,10 +344,11 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 	public boolean touchDragged(int x, int y, int pointer) {
     camera.unproject(testPoint.set(x, y, 0));
     float delta = testPoint.x - target.x;
-    chainLight.chain.items[2] = Math.max(-5f, Math.min(chainLight.chain.items[2] + delta, 5f));
+    chainLight.chain.items[2] = chainLight2.chain.items[2] = Math.max(-5f, Math.min(chainLight.chain.items[2] + delta, 5f));
     delta = testPoint.y - target.y;
-    chainLight.chain.items[3] = Math.max(5f, Math.min(chainLight.chain.items[3] + delta, 15f));
+    chainLight.chain.items[3] = chainLight2.chain.items[3] = Math.max(5f, Math.min(chainLight.chain.items[3] + delta, 15f));
     chainLight.updateChain();
+    chainLight2.updateChain();
     target.set(testPoint.x, testPoint.y);
 		// if a mouse joint exists we simply update
 		// the target of the joint based on the new

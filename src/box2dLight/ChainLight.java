@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Mesh.VertexDataType;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Vector2;
@@ -136,6 +137,13 @@ public class ChainLight extends Light {
       }
     }
     setMesh();
+  }
+  
+  public void debugRender(ShapeRenderer shapeRenderer) {
+    shapeRenderer.setColor(Color.YELLOW);
+    for (int i = 0; i < rayNum; i++) {
+      shapeRenderer.line(startX[i], startY[i], endX[i], endY[i]);
+    }
   }
 
   void setMesh() {
@@ -273,8 +281,8 @@ public class ChainLight extends Light {
           : segmentAngles.items[i + 1]);
 
       // interpolate to find actual start and end angles
-      startAngle.set(previousAngle).lerp(currentAngle, 0.5f, tmpAngle);
-      endAngle.set(currentAngle).lerp(nextAngle, 0.5f, tmpAngle);
+      startAngle.set(previousAngle).slerp(currentAngle, 0.5f);
+      endAngle.set(currentAngle).slerp(nextAngle, 0.5f);
 
       int segmentVertex = i * 2;
       vSegmentStart.set(chain.items[segmentVertex], chain.items[segmentVertex + 1]);
@@ -290,8 +298,8 @@ public class ChainLight extends Light {
         float position = j * raySpacing;
 
         // interpolate ray angle based on position within segment
-        rayAngle.set(startAngle).lerp(endAngle, position / segmentLengths.items[i],
-            tmpAngle);
+        rayAngle.set(startAngle).slerp(endAngle, position / segmentLengths.items[i]
+            );
         v1.set(vDirection).scl(position).add(vSegmentStart);
 
         this.startX[rayNumber] = v1.x;
