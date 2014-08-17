@@ -17,6 +17,8 @@ import com.badlogic.gdx.utils.Pools;
 public class ChainLight extends Light {
   private Body body;
   private Vector2 bodyPosition = new Vector2();
+  public static float defaultRayStartOffset = 0;
+  public float rayStartOffset;
 
   public final FloatArray chain;
   private final FloatArray segmentAngles = new FloatArray();
@@ -210,6 +212,7 @@ public class ChainLight extends Light {
   public ChainLight(RayHandler rayHandler, int rays, Color color,
       float distance, float x, float y, float[] chain) {
     super(rayHandler, rays, color, 0f, distance);
+    rayStartOffset = ChainLight.defaultRayStartOffset;
 
     vertexNum = (vertexNum - 1) * 2;
 
@@ -244,6 +247,7 @@ public class ChainLight extends Light {
     Vector2 v2 = Pools.obtain(Vector2.class);
     Vector2 vSegmentStart = Pools.obtain(Vector2.class);
     Vector2 vDirection = Pools.obtain(Vector2.class);
+    Vector2 vRayOffset = Pools.obtain(Vector2.class);
     Spinor tmpAngle = Pools.obtain(Spinor.class);
     // following Spinors used to represent perpendicular angle of each segment
     Spinor previousAngle = Pools.obtain(Spinor.class);
@@ -300,11 +304,13 @@ public class ChainLight extends Light {
         // interpolate ray angle based on position within segment
         rayAngle.set(startAngle).slerp(endAngle, position / segmentLengths.items[i]
             );
-        v1.set(vDirection).scl(position).add(vSegmentStart);
+        float angle = rayAngle.angle();
+        vRayOffset.set(this.rayStartOffset, 0).rotateRad(angle);
+        v1.set(vDirection).scl(position).add(vSegmentStart).add(vRayOffset);
 
         this.startX[rayNumber] = v1.x;
         this.startY[rayNumber] = v1.y;
-        v2.set(distance, 0).rotateRad(rayAngle.angle()).add(v1);
+        v2.set(distance, 0).rotateRad(angle).add(v1);
         this.endX[rayNumber] = v2.x;
         this.endY[rayNumber] = v2.y;
         rayNumber++;
@@ -319,6 +325,7 @@ public class ChainLight extends Light {
     Pools.free(v2);
     Pools.free(vSegmentStart);
     Pools.free(vDirection);
+    Pools.free(vRayOffset);
     Pools.free(previousAngle);
     Pools.free(currentAngle);
     Pools.free(nextAngle);

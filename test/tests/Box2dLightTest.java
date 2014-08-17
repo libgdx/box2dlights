@@ -131,6 +131,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 	//	 new DirectionalLight(rayHandler, 24, new Color(0,0.4f,0,1f), -45);
 		shapeRenderer = new ShapeRenderer();
 
+		ChainLight.defaultRayStartOffset = 1;
     chainLight = new ChainLight(rayHandler, 50, null, 30,
         0, 0, new float[]{0, 5, -3, 10, 0, 15});
     
