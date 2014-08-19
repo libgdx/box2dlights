@@ -17,8 +17,11 @@ import com.badlogic.gdx.utils.Pools;
 public class ChainLight extends Light {
   private Body body;
   private Vector2 bodyPosition = new Vector2();
-  public static float defaultRayStartOffset = 0;
+  
+  public static float defaultRayStartOffset = 0.001f;
   public float rayStartOffset;
+
+  private int rayDirection;
 
   public final FloatArray chain;
   private final FloatArray segmentAngles = new FloatArray();
@@ -205,14 +208,15 @@ public class ChainLight extends Light {
   }
 
   public ChainLight(RayHandler rayHandler, int rays, Color color,
-      float distance, float x, float y) {
-    this(rayHandler, rays, color, distance, x, y, null);
+      float distance, float x, float y, int rayDirection) {
+    this(rayHandler, rays, color, distance, x, y, rayDirection, null);
   }
   
   public ChainLight(RayHandler rayHandler, int rays, Color color,
-      float distance, float x, float y, float[] chain) {
+      float distance, float x, float y, int rayDirection, float[] chain) {
     super(rayHandler, rays, color, 0f, distance);
     rayStartOffset = ChainLight.defaultRayStartOffset;
+    this.rayDirection = rayDirection;
 
     vertexNum = (vertexNum - 1) * 2;
 
@@ -269,7 +273,7 @@ public class ChainLight extends Light {
       v1.set(chain.items[i + 2], chain.items[i + 3])
           .sub(chain.items[i], chain.items[i + 1]);
       segmentLengths.add(v1.len());
-      segmentAngles.add(v1.rotate90(1).angle() * MathUtils.degreesToRadians);
+      segmentAngles.add(v1.rotate90(rayDirection).angle() * MathUtils.degreesToRadians);
       remainingLength += segmentLengths.items[j];
     }
 
