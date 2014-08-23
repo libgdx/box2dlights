@@ -466,9 +466,10 @@ public class RayHandler implements Disposable {
 	/**
 	 * Enables usage of diffuse algorithm and sets specified blending mode
 	 * 
-	 * <p>If set to true lights are blended using the diffuse shader. This is
-	 * more realistic model than normally used as it preserve colors but might
-	 * look bit darker and also it might improve performance slightly.
+	 * <p>Default: {@link BlendFunc#MULTIPLY}
+	 * 
+	 * @param blendFunc
+	 * 			- {@link BlendFunc#MULTIPLY} or {@link BlendFunc#OVERLAY}
 	 */
 	public static void useDiffuseLight(BlendFunc blendFunc) {
 		isDiffuse = true;
