@@ -169,12 +169,12 @@ public abstract class PositionalLight extends Light {
 	
 	@Override
 	protected void setRayNum(int rays) {
-	    super.setRayNum(rays);
-	    
-        sin = new float[rays];
-        cos = new float[rays];
-        endX = new float[rays];
-        endY = new float[rays];
+		super.setRayNum(rays);
+		
+		sin = new float[rays];
+		cos = new float[rays];
+		endX = new float[rays];
+		endY = new float[rays];
 	}
 
 	@Override
