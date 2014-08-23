@@ -16,12 +16,12 @@ public abstract class PositionalLight extends Light {
 	private Body body;
 	private float bodyOffsetX;
 	private float bodyOffsetY;
-	final float sin[];
-	final float cos[];
+	float sin[];
+	float cos[];
 
 	final Vector2 start = new Vector2();
-	final float endX[];
-	final float endY[];
+	float endX[];
+	float endY[];
 
 	/** attach positional light to automatically follow body. Position is fixed to given offset. */
 	@Override
@@ -157,10 +157,6 @@ public abstract class PositionalLight extends Light {
 		super(rayHandler, rays, color, directionDegree, distance);
 		start.x = x;
 		start.y = y;
-		sin = new float[rays];
-		cos = new float[rays];
-		endX = new float[rays];
-		endY = new float[rays];
 
 		lightMesh = new Mesh(VertexDataType.VertexArray, false, vertexNum, 0, new VertexAttribute(Usage.Position, 2,
 			"vertex_positions"), new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
@@ -169,6 +165,16 @@ public abstract class PositionalLight extends Light {
 			"vertex_positions"), new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
 			new VertexAttribute(Usage.Generic, 1, "s"));
 		setMesh();
+	}
+	
+	@Override
+	protected void setRayNum(int rays) {
+	    super.setRayNum(rays);
+	    
+        sin = new float[rays];
+        cos = new float[rays];
+        endX = new float[rays];
+        endY = new float[rays];
 	}
 
 	@Override
