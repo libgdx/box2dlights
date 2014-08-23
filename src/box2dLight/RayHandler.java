@@ -33,6 +33,9 @@ public class RayHandler implements Disposable {
 	 * TODO: remove public modifier and add getter 
 	 * */
 	public static boolean isDiffuse = false;
+	
+	/** Blend function used for diffuse lights rendering **/
+	static BlendFunc diffuseBlendFunc = BlendFunc.MULTIPLY;
 
 	final Matrix4 combined = new Matrix4();
 	final Color ambientLight = new Color();
@@ -461,6 +464,18 @@ public class RayHandler implements Disposable {
 	}
 	
 	/**
+	 * Enables usage of diffuse algorithm and sets specified blending mode
+	 * 
+	 * <p>If set to true lights are blended using the diffuse shader. This is
+	 * more realistic model than normally used as it preserve colors but might
+	 * look bit darker and also it might improve performance slightly.
+	 */
+	public static void useDiffuseLight(BlendFunc blendFunc) {
+		isDiffuse = true;
+		diffuseBlendFunc = blendFunc;
+	}
+	
+	/**
 	 * Sets rendering to custom viewport with specified position and size
 	 */
 	public void useCustomViewport(int x, int y, int width, int height) {
@@ -513,6 +528,30 @@ public class RayHandler implements Disposable {
 	 */
 	public FrameBuffer getLightMapBuffer() {
 		return lightMap.frameBuffer;
+	}
+	
+	/** Specifies (int sfactor, int dfactor) typle passed to glBlendFunc **/
+	public static enum BlendFunc {
+	
+		/** The more realistic blending model without over-burn effect **/
+		MULTIPLY(GL20.GL_DST_COLOR, GL20.GL_ZERO),
+		
+		/** Blending model for diffuse lights used in versions <= 1.2.0
+		 * Produces over-burn effect however could be still used if needed **/
+		OVERLAY(GL20.GL_DST_COLOR, GL20.GL_SRC_COLOR);
+	
+		int sfactor;
+		int dfactor;
+		
+		BlendFunc(int sfactor, int dfactor) {
+			this.sfactor = sfactor;
+			this.dfactor = dfactor;
+		}
+		
+		void apply() {
+			Gdx.gl20.glBlendFunc(sfactor, dfactor);
+		}
+		
 	}
 
 }

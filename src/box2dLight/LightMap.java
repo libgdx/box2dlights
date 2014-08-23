@@ -48,7 +48,7 @@ class LightMap {
 			if (RayHandler.isDiffuse) {
 				shader = diffuseShader;
 				shader.begin();
-				Gdx.gl20.glBlendFunc(GL20.GL_DST_COLOR, GL20.GL_SRC_COLOR);
+				RayHandler.diffuseBlendFunc.apply();
 				shader.setUniformf("ambient", c.r, c.g, c.b, c.a);
 			} else {
 				shader.begin();
