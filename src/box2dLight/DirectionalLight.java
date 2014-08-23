@@ -131,7 +131,7 @@ public class DirectionalLight extends Light {
 
 			segments[size++] = mx[i] + softShadowLength * cos;
 			segments[size++] = my[i] + softShadowLength * sin;
-			segments[size++] = zero;
+			segments[size++] = zeroColorBits;
 			segments[size++] = 1f;
 		}
 		softShadowMesh.setVertices(segments, 0, size);
@@ -197,6 +197,10 @@ public class DirectionalLight extends Light {
 		}
 		return oddNodes;
 
+	}
+
+	@Override
+	public void setDistance(float dist) {
 	}
 
 }

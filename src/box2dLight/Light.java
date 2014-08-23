@@ -10,82 +10,126 @@ import com.badlogic.gdx.physics.box2d.RayCastCallback;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
- * @author kalle
+ * Light is data container for all the light parameters. When created lights
+ * are automatically added to rayHandler and could be removed by calling
+ * {@link #remove()} and added manually by calling {@link #add(RayHandler)}.
  * 
+ * <p>Implements {@link Disposable}
+ * @author kalle_h
  */
 public abstract class Light implements Disposable {
 
 	static final Color DefaultColor = new Color(0.75f, 0.75f, 0.5f, 0.75f);
-	private boolean active = true;
+	static final float zeroColorBits = Color.toFloatBits(0f, 0f, 0f, 0f);
+	static final int MIN_RAYS = 3;
+	
+	protected final Color color = new Color();
+	protected final Vector2 tmpPosition = new Vector2();
+	
+	protected RayHandler rayHandler;
+	
+	protected boolean active = true;
 	protected boolean soft = true;
 	protected boolean xray = false;
 	protected boolean staticLight = false;
-	protected float softShadowLength = 2.5f;
-
-	protected RayHandler rayHandler;
 	protected boolean culled = false;
+
 	protected int rayNum;
 	protected int vertexNum;
+	
 	protected float distance;
 	protected float direction;
-
-	protected Color color = new Color();
+	protected float colorF;
+	protected float softShadowLength = 2.5f;
+	
 	protected Mesh lightMesh;
 	protected Mesh softShadowMesh;
 
-	protected float colorF;
+	protected float segments[];
+	protected float[] mx;
+	protected float[] my;
+	protected float[] f;
+	protected int m_index = 0;
 
-	final static int MIN_RAYS = 3;
-
-	float segments[];
-	float[] mx;
-	float[] my;
-	float[] f;
-	int m_index = 0;
-
-	public Light(RayHandler rayHandler, int rays, Color color, float directionDegree,
-			float distance) {
+	/** Creates new active light and automatically adds it to the specified
+	 * {@link RayHandler} instance.
+	 * 
+	 * @param rayHandler
+	 *            not null instance of RayHandler
+	 * @param rays
+	 *            number of rays - more rays make light to look more realistic
+	 *            but will decrease performance, can't be less than MIN_RAYS
+	 * @param color
+	 *            light color
+	 * @param directionDegree
+	 *            direction in degrees (if applicable) 
+	 * @param distance
+	 *            light distance (if applicable)
+	 */
+	public Light(RayHandler rayHandler, int rays, Color color,
+			float directionDegree, float distance) {
 
 		rayHandler.lightList.add(this);
 		this.rayHandler = rayHandler;
 		setRayNum(rays);
-		this.direction = directionDegree;
-		distance *= RayHandler.gammaCorrectionParameter;
-		this.distance = distance < 0.01f ? 0.01f : distance;
+		setDirection(directionDegree);
+		setDistance(distance);
 		setColor(color);
 	}
 
+
+	abstract void update();
+
+	abstract void render();
+	
 	/**
-	 * setColor(Color newColor) { rgb set the color and alpha set intesity NOTE:
-	 * you can also use colorless light with shadows(EG 0,0,0,1)
+	 * Sets light distance if applicable
+	 * 
+	 * <p>NOTE: MIN value should be capped to 0.1f meter
+	 */
+	public abstract void setDistance(float dist);
+
+	/**
+	 * Sets light direction if applicable
+	 */
+	public abstract void setDirection(float directionDegree);
+	
+	/**
+	 * Sets light color
+	 * 
+	 * <p>NOTE: you can also use colorless light with shadows (EG 0,0,0,1)
 	 * 
 	 * @param newColor
+	 *            RGB set the color and Alpha set intensity
+	 * 
+	 * @see #setColor(float, float, float, float)
 	 */
 	public void setColor(Color newColor) {
 		if (newColor != null) {
 			color.set(newColor);
-			colorF = color.toFloatBits();
 		} else {
-			color = DefaultColor;
-			colorF = DefaultColor.toFloatBits();
+			color.set(DefaultColor);
 		}
+		colorF = color.toFloatBits();
 		if (staticLight)
 			staticUpdate();
 	}
 
 	/**
-	 * set Color(float r, float g, float b, float a) rgb set the color and alpha
-	 * set intesity NOTE: you can also use colorless light with shadows(EG
-	 * 0,0,0,1)
+	 * Sets light color
+	 * 
+	 * <p>NOTE: you can also use colorless light with shadows (EG 0,0,0,1)
 	 * 
 	 * @param r
-	 *            red
+	 *            lights color red component
 	 * @param g
-	 *            green
+	 *            lights color green component
 	 * @param b
-	 *            blue
+	 *            lights color blue component
 	 * @param a
-	 *            intesity
+	 *            lights shadow intensity
+	 * 
+	 * @see #setColor(Color)
 	 */
 	public void setColor(float r, float g, float b, float a) {
 		color.set(r, g, b, a);
@@ -93,96 +137,114 @@ public abstract class Light implements Disposable {
 		if (staticLight)
 			staticUpdate();
 	}
-
+	
 	/**
-	 * setDistance(float dist) MIN capped to 1cm
-	 * 
-	 * @param dist
+	 * Adds light to specified RayHandler
 	 */
-	public void setDistance(float dist) {
+	public void add(RayHandler rayHandler) {
+		this.rayHandler = rayHandler;
+		if (active) {
+			rayHandler.lightList.add(this);
+		} else {
+			rayHandler.disabledLights.add(this);
+		}
 	}
 
-	abstract void update();
-
-	abstract void render();
-
-	public abstract void setDirection(float directionDegree);
-
+	/**
+	 * Removes light from specified RayHandler
+	 */
 	public void remove() {
 		if (active) {
 			rayHandler.lightList.removeValue(this, false);
 		} else {
 			rayHandler.disabledLights.removeValue(this, false);
 		}
-		dispose();
+		rayHandler = null;
 	}
-	
+
+	/**
+	 * Disposes all light resources
+	 */
 	public void dispose() {
 		lightMesh.dispose();
 		softShadowMesh.dispose();
 	}
 
 	/**
-	 * attach positional light to automatically follow body. Position is fixed
-	 * to given offset
+	 * Attaches light to specified body
 	 * 
-	 * NOTE: does absolute nothing if directional light
+	 * <p>NOTE: not applicable for {@link DirectionalLight}
+	 * 
+	 * @param body
+	 *            that will be automatically followed, note that the body
+	 *            rotation angle is taken into account for the light offset
+	 *            and direction calculations
+	 * @param offsetX
+	 *            horizontal relative offset in world coordinates
+	 * @param offsetY
+	 *            vertical relative offset in world coordinates
+	 * 
 	 */
-	public abstract void attachToBody(Body body, float offsetX, float offSetY);
+	public abstract void attachToBody(Body body, float offsetX, float offsetY);
 
 	/**
-	 * @return attached body or null if not set.
+	 * @return attached body or <code>null</code> if not set
 	 * 
-	 *         NOTE: directional light allways return null
+	 *         <p>NOTE: {@link DirectionalLight} always return
+	 *         <code>null</code>
+	 * 
+	 * @see #attachToBody(Body, float, float)
 	 */
 	public abstract Body getBody();
 
 	/**
-	 * set light starting position
+	 * Sets light starting position
 	 * 
-	 * NOTE: does absolute nothing if directional light
+	 * <p>NOTE: not applicable for {@link DirectionalLight}
+	 * 
+	 * @see #setPosition(Vector2)
 	 */
 	public abstract void setPosition(float x, float y);
 
 	/**
-	 * set light starting position
+	 * Sets light starting position
 	 * 
-	 * NOTE: does absolute nothing if directional light
+	 * <p>NOTE: not applicable for {@link DirectionalLight}
+	 * 
+	 * @see #setPosition(float, float)
 	 */
 	public abstract void setPosition(Vector2 position);
 
-	final Vector2 tmpPosition = new Vector2();
-
 	/**
-	 * starting position of light in world coordinates. directional light return
-	 * zero vector.
+	 * @return starting position of light in world coordinates
+	 *         or zero vector for {@link DirectionalLight}
 	 * 
-	 * NOTE: changing this vector does nothing
-	 * 
-	 * @return posX
+	 *         <p>NOTE: changing this vector does nothing
 	 */
 	public Vector2 getPosition() {
 		return tmpPosition;
 	}
 
 	/**
-	 * horizontal starting position of light in world coordinates. directional
-	 * light return 0
-	 */
-	/**
-	 * @return posX
+	 * @return horizontal starting position of light in world coordinates
+	 *         or 0 for {@link DirectionalLight}
 	 */
 	public abstract float getX();
 
 	/**
-	 * vertical starting position of light in world coordinates. directional
-	 * light return 0
-	 */
-	/**
-	 * @return posY
+	 * @return vertical starting position of light in world coordinates
+	 *         or 0 for {@link DirectionalLight}
 	 */
 	public abstract float getY();
 
+	/**
+	 * Updates static light
+	 * 
+	 * <p><b>NOTE!!: Currently is called after each change, should be removed
+	 * and 'dirty' flag used instead to provide one update operation for all
+	 * the changes done to the light for better performance</b>
+	 */
+	@Deprecated
 	void staticUpdate() {
 		boolean tmp = rayHandler.culling;
 		staticLight = !staticLight;
@@ -192,94 +254,89 @@ public abstract class Light implements Disposable {
 		staticLight = !staticLight;
 	}
 
-	public final boolean isActive() {
+	/** @return if this light is active **/
+	public boolean isActive() {
 		return active;
 	}
 
 	/**
-	 * disable/enables this light updates and rendering.
-	 * 
-	 * @param active
+	 * Enables/disables this light update and rendering
 	 */
-	public final void setActive(boolean active) {
+	public void setActive(boolean active) {
 		if (active == this.active)
 			return;
 
+		this.active = active;
+		if (rayHandler == null)
+			return;
+		
 		if (active) {
 			rayHandler.lightList.add(this);
 			rayHandler.disabledLights.removeValue(this, true);
 		} else {
 			rayHandler.disabledLights.add(this);
 			rayHandler.lightList.removeValue(this, true);
-
 		}
-
-		this.active = active;
-
 	}
 
 	/**
-	 * do light beams go through obstacles
-	 * 
-	 * @return
+	 * @return if this light beams go through obstacles
 	 */
-	public final boolean isXray() {
+	public boolean isXray() {
 		return xray;
 	}
 
 	/**
-	 * disable/enables xray beams. enabling this will allow beams go through
-	 * obstacles this reduce cpu burden of light about 70%. Use combination of
-	 * xray and non xray lights wisely
+	 * Enables/disables x-ray beams for this light
 	 * 
-	 * @param xray
+	 * <p>Enabling this will allow beams go through obstacles that reduce CPU
+	 * burden of light about 70%.
+	 * 
+	 * <p>Use the combination of x-ray and non x-ray lights wisely
 	 */
-	public final void setXray(boolean xray) {
+	public void setXray(boolean xray) {
 		this.xray = xray;
 		if (staticLight)
 			staticUpdate();
 	}
 
+	// TODO: Fix this JavaDoc when staticUpdate() will change
 	/**
-	 * return is this light static. Static light do not get any automatic
-	 * updates but setting any parameters will update it. Static lights are
-	 * usefull for lights that you want to collide with static geometry but
-	 * ignore all the dynamic objects.
-	 * 
-	 * @return
+	 * @return if this light is static
+	 *         <p>Static light do not get any automatic updates but setting
+	 *         any parameters will update it. Static lights are useful for
+	 *         lights that you want to collide with static geometry but ignore
+	 *         all the dynamic objects.
 	 */
 	public final boolean isStaticLight() {
 		return staticLight;
 	}
 
+	// TODO: Fix this JavaDoc when staticUpdate() will change
 	/**
-	 * disables/enables staticness for light. Static light do not get any
-	 * automatic updates but setting any parameters will update it. Static
-	 * lights are usefull for lights that you want to collide with static
-	 * geometry but ignore all the dynamic objects. Reduce cpu burden of light
-	 * about 90%.
+	 * Enables/disables this light static behavior
 	 * 
-	 * @param staticLight
+	 * <p>Static light do not get any automatic updates but setting any
+	 * parameters will update it. Static lights are useful for lights that you
+	 * want to collide with static geometry but ignore all the dynamic objects
+	 * 
+	 * <p>Reduce CPU burden of light about 90%
 	 */
-	public final void setStaticLight(boolean staticLight) {
+	public void setStaticLight(boolean staticLight) {
 		this.staticLight = staticLight;
 		if (staticLight)
 			staticUpdate();
 	}
 
 	/**
-	 * is tips of light beams soft
-	 * 
-	 * @return
+	 * @return if tips of this light beams are soft
 	 */
-	public final boolean isSoft() {
+	public boolean isSoft() {
 		return soft;
 	}
 
 	/**
-	 * disable/enables softness on tips of lights beams.
-	 * 
-	 * @param soft
+	 * Enables/disables softness on tips of this light beams
 	 */
 	public final void setSoft(boolean soft) {
 		this.soft = soft;
@@ -288,26 +345,27 @@ public abstract class Light implements Disposable {
 	}
 
 	/**
-	 * return how much is softness used in tip of the beams. default 2.5
+	 * @return softness value for beams tips
 	 * 
-	 * @return
+	 *         <p>Default: <code>2.5f</code>
 	 */
-	public final float getSoftShadowLength() {
+	public float getSoftShadowLength() {
 		return softShadowLength;
 	}
 
 	/**
-	 * set how much is softness used in tip of the beams. default 2.5
+	 * Sets softness value for beams tips
 	 * 
-	 * @param softShadowLength
+	 * <p>Default: <code>2.5f</code>
 	 */
-	public final void setSoftnessLength(float softShadowLength) {
+	public void setSoftnessLength(float softShadowLength) {
 		this.softShadowLength = softShadowLength;
 		if (staticLight)
 			staticUpdate();
 	}
 
-	private final void setRayNum(int rays) {
+	
+	protected void setRayNum(int rays) {
 
 		if (rays < MIN_RAYS)
 			rays = MIN_RAYS;
@@ -322,31 +380,33 @@ public abstract class Light implements Disposable {
 
 	}
 
-	static final float zero = Color.toFloatBits(0f, 0f, 0f, 0f);
-
 	/**
-	 * Color getColor
-	 * 
-	 * @return current lights color
+	 * @return current color of this light
 	 */
 	public Color getColor() {
 		return color;
 	}
 
 	/**
-	 * float getDistance()
-	 * 
-	 * @return light rays distance.
+	 * @return rays distance of this light (without gamma correction)
 	 */
 	public float getDistance() {
-		float dist = distance / RayHandler.gammaCorrectionParameter;
-		return dist;
+		return distance / RayHandler.gammaCorrectionParameter;
 	}
 
-	/** method for checking is given point inside of this light */
+	/**
+	 * Checks if given point is inside of this light area
+	 * 
+	 * @param x - horizontal position of point in world coordinates
+	 * @param y - vertical position of point in world coordinates
+	 */
 	public boolean contains(float x, float y) {
 		return false;
 	}
+
+
+	/** light filter **/
+	static private Filter filterA = null;
 
 	final RayCastCallback ray = new RayCastCallback() {
 		@Override
@@ -364,35 +424,30 @@ public abstract class Light implements Disposable {
 		}
 	};
 
-	final boolean contactFilter(Fixture fixtureB) {
+	boolean contactFilter(Fixture fixtureB) {
 		Filter filterB = fixtureB.getFilterData();
 
-		if (filterA.groupIndex == filterB.groupIndex && filterA.groupIndex != 0)
+		if (filterA.groupIndex != 0 &&
+			filterA.groupIndex == filterB.groupIndex)
 			return filterA.groupIndex > 0;
 
-		return (filterA.maskBits & filterB.categoryBits) != 0
-				&& (filterA.categoryBits & filterB.maskBits) != 0;
-
+		return  (filterA.maskBits & filterB.categoryBits) != 0 &&
+				(filterA.categoryBits & filterB.maskBits) != 0;
 	}
 
-	/** light filter **/
-	static private Filter filterA = null;
-
 	/**
-	 * set given contact filter for ALL LIGHTS
-	 * 
-	 * @param filter
+	 * Sets given contact filter for ALL LIGHTS
 	 */
 	static public void setContactFilter(Filter filter) {
 		filterA = filter;
 	}
 
 	/**
-	 * create new contact filter for ALL LIGHTS with give parameters
+	 * Creates new contact filter for ALL LIGHTS with give parameters
 	 * 
-	 * @param categoryBits
-	 * @param groupIndex
-	 * @param maskBits
+	 * @param categoryBits - see {@link Filter#categoryBits}
+	 * @param groupIndex   - see {@link Filter#groupIndex}
+	 * @param maskBits     - see {@link Filter#maskBits}
 	 */
 	static public void setContactFilter(short categoryBits, short groupIndex,
 			short maskBits) {
