@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix3;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.FloatArray;
@@ -17,7 +18,7 @@ import com.badlogic.gdx.utils.Pools;
 public class ChainLight extends Light {
   private Body body;
   private Vector2 bodyPosition = new Vector2();
-  
+
   public static float defaultRayStartOffset = 0.001f;
   public float rayStartOffset;
 
@@ -91,6 +92,29 @@ public class ChainLight extends Light {
       rotateAroundZero = new Matrix3(), restorePosition = new Matrix3();
   private final Vector2 tmpVec = new Vector2();
 
+  // geometry for culling and contains functionality
+  private final Rectangle boundingRect = new Rectangle(),
+      rayHandlerRect = new Rectangle();
+
+  private void updateBoundingRects() {
+    float maxX = startX[0], minX = startX[0], maxY = startY[0], minY = startY[0];
+
+    for (int i = 0; i < rayNum; i++) {
+
+      maxX = Math.max(maxX, startX[i]);
+      maxX = Math.max(maxX, mx[i]);
+      minX = Math.min(minX, startX[i]);
+      minX = Math.min(minX, mx[i]);
+      maxY = Math.max(maxY, startY[i]);
+      maxY = Math.max(maxY, my[i]);
+      minY = Math.min(minY, startY[i]);
+      minY = Math.min(minY, my[i]);
+    }
+    boundingRect.set(minX, minY, maxX - minX, maxY - minY);
+    rayHandlerRect.set(rayHandler.x1, rayHandler.y1, rayHandler.x2
+        - rayHandler.x1, rayHandler.y2 - rayHandler.y1);
+  }
+
   @Override
   void update() {
     if (body != null && !staticLight) {
@@ -119,9 +143,9 @@ public class ChainLight extends Light {
     }
 
     if (rayHandler.culling) {
-      culled = ((!rayHandler.intersect(tmpPosition.x, tmpPosition.y, distance
-          + softShadowLength)));
-      if (culled)
+      updateBoundingRects();
+      if (boundingRect.width > 0 && boundingRect.height > 0
+          && !boundingRect.overlaps(rayHandlerRect))
         return;
     }
 
@@ -143,12 +167,24 @@ public class ChainLight extends Light {
     }
     setMesh();
   }
-  
+
   public void debugRender(ShapeRenderer shapeRenderer) {
     shapeRenderer.setColor(Color.YELLOW);
+
+    FloatArray vertices = Pools.obtain(FloatArray.class);
+    vertices.clear();
+
     for (int i = 0; i < rayNum; i++) {
-      shapeRenderer.line(startX[i], startY[i], endX[i], endY[i]);
+      vertices.addAll(mx[i], my[i]);
     }
+
+    for (int i = rayNum - 1; i > -1; i--) {
+      vertices.addAll(startX[i], startY[i]);
+    }
+
+    shapeRenderer.polygon(vertices.shrink());
+
+    Pools.free(vertices);
   }
 
   void setMesh() {
@@ -211,7 +247,7 @@ public class ChainLight extends Light {
       float distance, float x, float y, int rayDirection) {
     this(rayHandler, rays, color, distance, x, y, rayDirection, null);
   }
-  
+
   public ChainLight(RayHandler rayHandler, int rays, Color color,
       float distance, float x, float y, int rayDirection, float[] chain) {
     super(rayHandler, rays, color, 0f, distance);
@@ -231,7 +267,6 @@ public class ChainLight extends Light {
     } else {
       this.chain = new FloatArray();
     }
-    
 
     updateChain();
 
@@ -270,10 +305,11 @@ public class ChainLight extends Light {
     float remainingLength = 0;
 
     for (int i = 0, j = 0; i < chain.size - 2; i += 2, j++) {
-      v1.set(chain.items[i + 2], chain.items[i + 3])
-          .sub(chain.items[i], chain.items[i + 1]);
+      v1.set(chain.items[i + 2], chain.items[i + 3]).sub(chain.items[i],
+          chain.items[i + 1]);
       segmentLengths.add(v1.len());
-      segmentAngles.add(v1.rotate90(rayDirection).angle() * MathUtils.degreesToRadians);
+      segmentAngles.add(v1.rotate90(rayDirection).angle()
+          * MathUtils.degreesToRadians);
       remainingLength += segmentLengths.items[j];
     }
 
@@ -283,7 +319,8 @@ public class ChainLight extends Light {
     for (int i = 0; i < segmentCount; i++) {
 
       // get this and adjacent segment angles
-      previousAngle.set(i == 0 ? segmentAngles.items[i] : segmentAngles.items[i - 1]);
+      previousAngle.set(i == 0 ? segmentAngles.items[i]
+          : segmentAngles.items[i - 1]);
       currentAngle.set(segmentAngles.items[i]);
       nextAngle.set(i == segmentAngles.size - 1 ? segmentAngles.items[i]
           : segmentAngles.items[i + 1]);
@@ -293,8 +330,10 @@ public class ChainLight extends Light {
       endAngle.set(currentAngle).slerp(nextAngle, 0.5f);
 
       int segmentVertex = i * 2;
-      vSegmentStart.set(chain.items[segmentVertex], chain.items[segmentVertex + 1]);
-      vDirection.set(chain.items[segmentVertex + 2], chain.items[segmentVertex + 3])
+      vSegmentStart.set(chain.items[segmentVertex],
+          chain.items[segmentVertex + 1]);
+      vDirection
+          .set(chain.items[segmentVertex + 2], chain.items[segmentVertex + 3])
           .sub(vSegmentStart).nor();
 
       float raySpacing = remainingLength / remainingRays;
@@ -306,8 +345,8 @@ public class ChainLight extends Light {
         float position = j * raySpacing;
 
         // interpolate ray angle based on position within segment
-        rayAngle.set(startAngle).slerp(endAngle, position / segmentLengths.items[i]
-            );
+        rayAngle.set(startAngle).slerp(endAngle,
+            position / segmentLengths.items[i]);
         float angle = rayAngle.angle();
         vRayOffset.set(this.rayStartOffset, 0).rotateRad(angle);
         v1.set(vDirection).scl(position).add(vSegmentStart).add(vRayOffset);
@@ -343,28 +382,38 @@ public class ChainLight extends Light {
   public boolean contains(float x, float y) {
 
     // fast fail
-    final float x_d = tmpPosition.x - x;
-    final float y_d = tmpPosition.y - y;
-    final float dst2 = x_d * x_d + y_d * y_d;
-    if (distance * distance <= dst2)
+    if (!this.boundingRect.contains(x, y))
       return false;
 
     // actual check
 
-    boolean oddNodes = false;
-    float x2 = mx[rayNum] = tmpPosition.x;
-    float y2 = my[rayNum] = tmpPosition.y;
-    float x1, y1;
-    for (int i = 0; i <= rayNum; x2 = x1, y2 = y1, ++i) {
-      x1 = mx[i];
-      y1 = my[i];
-      if (((y1 < y) && (y2 >= y)) || (y1 >= y) && (y2 < y)) {
-        if ((y - y1) / (y2 - y1) * (x2 - x1) < (x - x1))
-          oddNodes = !oddNodes;
-      }
-    }
-    return oddNodes;
+    FloatArray vertices = Pools.obtain(FloatArray.class);
+    vertices.clear();
 
+    for (int i = 0; i < rayNum; i++) {
+      vertices.addAll(mx[i], my[i]);
+    }
+
+    for (int i = rayNum - 1; i > -1; i--) {
+      vertices.addAll(startX[i], startY[i]);
+    }
+
+    int intersects = 0;
+
+    for (int i = 0; i < vertices.size; i += 2) {
+      float x1 = vertices.items[i];
+      float y1 = vertices.items[i + 1];
+      float x2 = vertices.items[(i + 2) % vertices.size];
+      float y2 = vertices.items[(i + 3) % vertices.size];
+      if (((y1 <= y && y < y2) || (y2 <= y && y < y1))
+          && x < ((x2 - x1) / (y2 - y1) * (y - y1) + x1))
+        intersects++;
+    }
+    boolean result = (intersects & 1) == 1;
+
+    Pools.free(vertices);
+
+    return result;
   }
 
   @Override
