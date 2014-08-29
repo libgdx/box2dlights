@@ -133,13 +133,13 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 
 		ChainLight.defaultRayStartOffset = 1;
     chainLight = new ChainLight(rayHandler, 50, null, 30,
-        0, 0, 1, new float[]{0, 5, -3, 10, 0, 15});
+        1, new float[]{0, 5, -3, 10, 0, 15});
     
     chainLight2 = new ChainLight(rayHandler, 50, null, 30,
-        0, 0, -1, new float[]{0, 5, -3, 10, 0, 15});
+        -1, new float[]{0, 5, -3, 10, 0, 15});
 
     chainLight3 = new ChainLight(rayHandler, 50, null, 30,
-        0, 0, 1, new float[]{0, 5, -3, 10, 0, 15});
+        1, new float[]{0, 5, -3, 10, 0, 15});
 
     chainLight.setColor(MathUtils.random(), MathUtils.random(),
         MathUtils.random(), 1f);
