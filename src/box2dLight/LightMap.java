@@ -42,17 +42,16 @@ class LightMap {
 
 		// at last lights are rendered over scene
 		if (rayHandler.shadows) {
-
 			final Color c = rayHandler.ambientLight;
 			ShaderProgram shader = shadowShader;
 			if (RayHandler.isDiffuse) {
 				shader = diffuseShader;
 				shader.begin();
-				RayHandler.diffuseBlendFunc.apply();
+				rayHandler.diffuseBlendFunc.apply();
 				shader.setUniformf("ambient", c.r, c.g, c.b, c.a);
 			} else {
 				shader.begin();
-				Gdx.gl20.glBlendFunc(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
+				rayHandler.shadowBlendFunc.apply();
 				shader.setUniformf("ambient", c.r * c.a, c.g * c.a,
 						c.b * c.a, 1f - c.a);
 			}
@@ -60,8 +59,7 @@ class LightMap {
 			lightMapMesh.render(shader, GL20.GL_TRIANGLE_FAN);
 			shader.end();
 		} else if (needed) {
-
-			Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+			rayHandler.simpleBlendFunc.apply();
 			withoutShadowShader.begin();
 		//	withoutShadowShader.setUniformi("u_texture", 0);
 			lightMapMesh.render(withoutShadowShader, GL20.GL_TRIANGLE_FAN);
