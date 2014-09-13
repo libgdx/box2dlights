@@ -101,14 +101,14 @@ public class ChainLight extends Light {
 
     for (int i = 0; i < rayNum; i++) {
 
-      maxX = Math.max(maxX, startX[i]);
-      maxX = Math.max(maxX, mx[i]);
-      minX = Math.min(minX, startX[i]);
-      minX = Math.min(minX, mx[i]);
-      maxY = Math.max(maxY, startY[i]);
-      maxY = Math.max(maxY, my[i]);
-      minY = Math.min(minY, startY[i]);
-      minY = Math.min(minY, my[i]);
+      maxX = maxX > startX[i] ? maxX : startX[i];
+      maxX = maxX > mx[i] ? maxX : mx[i];
+      minX = minX < startX[i] ? minX : startX[i];
+      minX = minX < mx[i] ? minX : mx[i];
+      maxY = maxY > startY[i] ? maxY : startY[i];
+      maxY = maxY > my[i] ? maxY : my[i];
+      minY = minY < startY[i] ? minY : startY[i];
+      minY = minY < my[i] ? minY : my[i];
     }
     chainLightBounds.set(minX, minY, maxX - minX, maxY - minY);
     rayHandlerBounds.set(rayHandler.x1, rayHandler.y1, rayHandler.x2
