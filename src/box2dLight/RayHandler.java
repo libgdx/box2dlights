@@ -33,9 +33,27 @@ public class RayHandler implements Disposable {
 	 * TODO: remove public modifier and add getter 
 	 * */
 	public static boolean isDiffuse = false;
-	
-	/** Blend function used for diffuse lights rendering **/
-	static BlendFunc diffuseBlendFunc = BlendFunc.MULTIPLY;
+
+	/**
+	 * Blend function for lights rendering with both shadows and diffusion
+	 * <p>Default: (GL20.GL_DST_COLOR, GL20.GL_ZERO)
+	 */
+	public final BlendFunc diffuseBlendFunc =
+			new BlendFunc(GL20.GL_DST_COLOR, GL20.GL_ZERO);
+
+	/**
+	 * Blend function for lights rendering with shadows but without diffusion
+	 * <p>Default: (GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA)
+	 */
+	public final BlendFunc shadowBlendFunc =
+			new BlendFunc(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+	/**
+	 * Blend function for lights rendering without shadows and diffusion 
+	 * <p>Default: (GL20.GL_SRC_ALPHA, GL20.GL_ONE)
+	 */
+	public final BlendFunc simpleBlendFunc =
+			new BlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
 
 	final Matrix4 combined = new Matrix4();
 	final Color ambientLight = new Color();
@@ -252,7 +270,7 @@ public class RayHandler implements Disposable {
 
 		Gdx.gl.glDepthMask(false);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+		simpleBlendFunc.apply();
 
 		boolean useLightMap = (shadows || blur); 
 		if (useLightMap) {
@@ -464,19 +482,6 @@ public class RayHandler implements Disposable {
 	}
 	
 	/**
-	 * Enables usage of diffuse algorithm and sets specified blending mode
-	 * 
-	 * <p>Default: {@link BlendFunc#MULTIPLY}
-	 * 
-	 * @param blendFunc
-	 * 			- {@link BlendFunc#MULTIPLY} or {@link BlendFunc#OVERLAY}
-	 */
-	public static void useDiffuseLight(BlendFunc blendFunc) {
-		isDiffuse = true;
-		diffuseBlendFunc = blendFunc;
-	}
-	
-	/**
 	 * Sets rendering to custom viewport with specified position and size
 	 */
 	public void useCustomViewport(int x, int y, int width, int height) {
@@ -531,28 +536,4 @@ public class RayHandler implements Disposable {
 		return lightMap.frameBuffer;
 	}
 	
-	/** Specifies (int sfactor, int dfactor) typle passed to glBlendFunc **/
-	public static enum BlendFunc {
-	
-		/** The more realistic blending model without over-burn effect **/
-		MULTIPLY(GL20.GL_DST_COLOR, GL20.GL_ZERO),
-		
-		/** Blending model for diffuse lights used in versions <= 1.2.0
-		 * Produces over-burn effect however could be still used if needed **/
-		OVERLAY(GL20.GL_DST_COLOR, GL20.GL_SRC_COLOR);
-	
-		int sfactor;
-		int dfactor;
-		
-		BlendFunc(int sfactor, int dfactor) {
-			this.sfactor = sfactor;
-			this.dfactor = dfactor;
-		}
-		
-		void apply() {
-			Gdx.gl20.glBlendFunc(sfactor, dfactor);
-		}
-		
-	}
-
 }
