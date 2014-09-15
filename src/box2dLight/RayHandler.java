@@ -81,6 +81,7 @@ public class RayHandler implements Disposable {
 	
 	int blurNum = 1;
 	
+	boolean customViewport = false;
 	int viewportX = 0;
 	int viewportY = 0;
 	int viewportWidth = Gdx.graphics.getWidth();
@@ -289,9 +290,15 @@ public class RayHandler implements Disposable {
 		lightShader.end();
 
 		if (useLightMap) {
-			lightMap.frameBuffer.end(
-				viewportX, viewportY,
-				viewportWidth, viewportHeight);
+			if (customViewport) {
+				lightMap.frameBuffer.end(
+					viewportX,
+					viewportY,
+					viewportWidth,
+					viewportHeight);
+			} else {
+				lightMap.frameBuffer.end();
+			}
 			lightMap.render();
 		}
 	}
@@ -483,8 +490,11 @@ public class RayHandler implements Disposable {
 	
 	/**
 	 * Sets rendering to custom viewport with specified position and size
+	 * <p>Note: you will be responsible for update of viewport via this method
+	 * in case of any changes (on resize)
 	 */
 	public void useCustomViewport(int x, int y, int width, int height) {
+		customViewport = true;
 		viewportX = x;
 		viewportY = y;
 		viewportWidth = width;
@@ -497,10 +507,7 @@ public class RayHandler implements Disposable {
 	 * <p>0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()
 	 */
 	public void useDefaultViewport() {
-		viewportX = 0;
-		viewportY = 0;
-		viewportWidth = Gdx.graphics.getWidth();
-		viewportHeight = Gdx.graphics.getHeight();
+		customViewport = false;
 	}
 
 	/**
