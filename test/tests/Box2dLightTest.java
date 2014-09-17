@@ -2,6 +2,7 @@ package tests;
 
 import java.util.ArrayList;
 
+import box2dLight.ChainLight;
 import box2dLight.Light;
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -17,6 +18,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -110,7 +113,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		// rayHandler.setCombinedMatrix(camera.combined, camera.position.x,
 		// camera.position.y, camera.viewportWidth * camera.zoom,
 		// camera.viewportHeight * camera.zoom);
-		for (int i = 0; i < BALLSNUM; i++) {
+		for (int i = 0; i < BALLSNUM - 1; i++) {
 			// final Color c = new Color(MathUtils.random()*0.4f,
 			// MathUtils.random()*0.4f,
 			// MathUtils.random()*0.4f, 1f);
@@ -126,9 +129,35 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 
 		}
 	//	 new DirectionalLight(rayHandler, 24, new Color(0,0.4f,0,1f), -45);
+		shapeRenderer = new ShapeRenderer();
+
+		ChainLight.defaultRayStartOffset = 1;
+    chainLight = new ChainLight(rayHandler, 50, null, 30,
+        1, new float[]{0, 5, -3, 10, 0, 15});
+    
+    chainLight2 = new ChainLight(rayHandler, 50, null, 30,
+        -1, new float[]{0, 5, -3, 10, 0, 15});
+
+    chainLight3 = new ChainLight(rayHandler, 50, null, 30,
+        1, new float[]{0, 5, -3, 10, 0, 15});
+
+    chainLight.setColor(MathUtils.random(), MathUtils.random(),
+        MathUtils.random(), 1f);
+    chainLight2.setColor(MathUtils.random(), MathUtils.random(),
+        MathUtils.random(), 1f);
+    chainLight3.setColor(MathUtils.random(), MathUtils.random(),
+        MathUtils.random(), 1f);
+
+    Body body = balls.get(BALLSNUM - 1);
+    body.setTransform(0, 10, 0);
+    chainLight3.attachToBody(body, 1, 1);
+		
 		/** BOX2D LIGHT STUFF END */
 
 	}
+
+	ChainLight chainLight, chainLight2, chainLight3;
+	ShapeRenderer shapeRenderer;
 
 	@Override
 	public void render() {
@@ -138,6 +167,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		// should use fixed step
 
 		boolean stepped = fixedStep(Gdx.graphics.getDeltaTime());
+		Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.setProjectionMatrix(camera.combined);
@@ -186,6 +216,11 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 				+ "mouse at shadows: " + atShadow + " time used for shadow calculation:" +aika / ++times + "ns" , 0, 20);
 
 		batch.end();
+		shapeRenderer.setColor(Color.WHITE);
+		shapeRenderer.setProjectionMatrix(camera.combined);
+		shapeRenderer.begin(ShapeType.Line);
+		shapeRenderer.polyline(chainLight.chain.items, 0, chainLight.chain.size);
+		shapeRenderer.end();
 
 	}
 
@@ -308,12 +343,19 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 
 	@Override
 	public boolean touchDragged(int x, int y, int pointer) {
+    camera.unproject(testPoint.set(x, y, 0));
+    float delta = testPoint.x - target.x;
+    chainLight.chain.items[2] = chainLight2.chain.items[2] = Math.max(-5f, Math.min(chainLight.chain.items[2] + delta, 5f));
+    delta = testPoint.y - target.y;
+    chainLight.chain.items[3] = chainLight2.chain.items[3] = Math.max(5f, Math.min(chainLight.chain.items[3] + delta, 15f));
+    chainLight.updateChain();
+    chainLight2.updateChain();
+    target.set(testPoint.x, testPoint.y);
 		// if a mouse joint exists we simply update
 		// the target of the joint based on the new
 		// mouse coordinates
 		if (mouseJoint != null) {
-			camera.unproject(testPoint.set(x, y, 0));
-			mouseJoint.setTarget(target.set(testPoint.x, testPoint.y));
+			mouseJoint.setTarget(target);
 		}
 		return false;
 	}
