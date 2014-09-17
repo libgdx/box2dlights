@@ -228,7 +228,7 @@ public class ChainLight extends Light {
           .scl(softShadowLength * s).add(mx[i], my[i]);
       segments[size++] = tmpPerp.x;
       segments[size++] = tmpPerp.y;
-      segments[size++] = zero;
+      segments[size++] = zeroColorBits;
       segments[size++] = 0f;
     }
     softShadowMesh.setVertices(segments, 0, size);
@@ -464,4 +464,12 @@ public class ChainLight extends Light {
   public void setDirection(float directionDegree) {
   }
 
+  @Override
+  public void setDistance(float dist) {
+    dist *= RayHandler.gammaCorrectionParameter;
+    this.distance = dist < 0.01f ? 0.01f : dist;
+    if (staticLight)
+        staticUpdate();
+  }
+  
 }
