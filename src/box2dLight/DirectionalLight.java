@@ -53,14 +53,15 @@ public class DirectionalLight extends Light {
 		super.direction = direction;
 		sin = MathUtils.sinDeg(direction);
 		cos = MathUtils.cosDeg(direction);
-		if (staticLight) staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	float lastX;
 
 	@Override
 	void update () {
-		if (staticLight) return;
+		if (staticLight && !dirty) return;
+		dirty = false;
 
 		final float width = (rayHandler.x2 - rayHandler.x1);
 		final float height = (rayHandler.y2 - rayHandler.y1);

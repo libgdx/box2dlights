@@ -42,8 +42,7 @@ public class ConeLight extends PositionalLight {
 			endX[i] = distance * c;
 			endY[i] = distance * s;
 		}
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	/**

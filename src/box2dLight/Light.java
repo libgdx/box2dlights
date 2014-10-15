@@ -33,6 +33,7 @@ public abstract class Light implements Disposable {
 	protected boolean xray = false;
 	protected boolean staticLight = false;
 	protected boolean culled = false;
+	protected boolean dirty = true;
 
 	protected int rayNum;
 	protected int vertexNum;
@@ -111,8 +112,7 @@ public abstract class Light implements Disposable {
 			color.set(DefaultColor);
 		}
 		colorF = color.toFloatBits();
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	/**
@@ -134,8 +134,7 @@ public abstract class Light implements Disposable {
 	public void setColor(float r, float g, float b, float a) {
 		color.set(r, g, b, a);
 		colorF = color.toFloatBits();
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 	
 	/**
@@ -237,23 +236,6 @@ public abstract class Light implements Disposable {
 	 */
 	public abstract float getY();
 
-	/**
-	 * Updates static light
-	 * 
-	 * <p><b>NOTE!!: Currently is called after each change, should be removed
-	 * and 'dirty' flag used instead to provide one update operation for all
-	 * the changes done to the light for better performance</b>
-	 */
-	@Deprecated
-	void staticUpdate() {
-		boolean tmp = rayHandler.culling;
-		staticLight = !staticLight;
-		rayHandler.culling = false;
-		update();
-		rayHandler.culling = tmp;
-		staticLight = !staticLight;
-	}
-
 	/** @return if this light is active **/
 	public boolean isActive() {
 		return active;
@@ -296,11 +278,9 @@ public abstract class Light implements Disposable {
 	 */
 	public void setXray(boolean xray) {
 		this.xray = xray;
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
-	// TODO: Fix this JavaDoc when staticUpdate() will change
 	/**
 	 * @return if this light is static
 	 *         <p>Static light do not get any automatic updates but setting
@@ -312,7 +292,6 @@ public abstract class Light implements Disposable {
 		return staticLight;
 	}
 
-	// TODO: Fix this JavaDoc when staticUpdate() will change
 	/**
 	 * Enables/disables this light static behavior
 	 * 
@@ -324,8 +303,7 @@ public abstract class Light implements Disposable {
 	 */
 	public void setStaticLight(boolean staticLight) {
 		this.staticLight = staticLight;
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	/**
@@ -340,8 +318,7 @@ public abstract class Light implements Disposable {
 	 */
 	public final void setSoft(boolean soft) {
 		this.soft = soft;
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	/**
@@ -360,8 +337,7 @@ public abstract class Light implements Disposable {
 	 */
 	public void setSoftnessLength(float softShadowLength) {
 		this.softShadowLength = softShadowLength;
-		if (staticLight)
-			staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	
