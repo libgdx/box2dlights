@@ -59,8 +59,7 @@ public class ChainLight extends Light {
     this.body = body;
     this.bodyPosition.set(body.getPosition());
     bodyAngle = body.getAngle();
-    if (staticLight)
-      staticUpdate();
+    if (staticLight) dirty = true;
   }
 
   @Override
@@ -84,16 +83,14 @@ public class ChainLight extends Light {
   public void setPosition(float x, float y) {
     tmpPosition.x = x;
     tmpPosition.y = y;
-    if (staticLight)
-      staticUpdate();
+    if (staticLight) dirty = true;
   }
 
   @Override
   public void setPosition(Vector2 position) {
     tmpPosition.x = position.x;
     tmpPosition.y = position.y;
-    if (staticLight)
-      staticUpdate();
+    if (staticLight) dirty = true;
   }
 
   private void updateBoundingRects() {
@@ -149,8 +146,8 @@ public class ChainLight extends Light {
         return;
     }
 
-    if (staticLight)
-      return;
+    if (staticLight && !dirty) return;
+    dirty = false;
 
     for (int i = 0; i < rayNum; i++) {
       m_index = i;
@@ -468,8 +465,7 @@ public class ChainLight extends Light {
   public void setDistance(float dist) {
     dist *= RayHandler.gammaCorrectionParameter;
     this.distance = dist < 0.01f ? 0.01f : dist;
-    if (staticLight)
-        staticUpdate();
+    if (staticLight) dirty = true;
   }
   
 }

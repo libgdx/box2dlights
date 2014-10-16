@@ -29,7 +29,7 @@ public abstract class PositionalLight extends Light {
 		this.body = body;
 		bodyOffsetX = offsetX;
 		bodyOffsetY = offSetY;
-		if (staticLight) staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	@Override
@@ -61,14 +61,14 @@ public abstract class PositionalLight extends Light {
 	public void setPosition (float x, float y) {
 		start.x = x;
 		start.y = y;
-		if (staticLight) staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	@Override
 	public void setPosition (Vector2 position) {
 		start.x = position.x;
 		start.y = position.y;
-		if (staticLight) staticUpdate();
+		if (staticLight) dirty = true;
 	}
 
 	@Override
@@ -90,8 +90,9 @@ public abstract class PositionalLight extends Light {
 			if (culled) return;
 		}
 
-		if (staticLight) return;
-
+		if (staticLight && !dirty) return;
+		dirty = false;
+		
 		for (int i = 0; i < rayNum; i++) {
 			m_index = i;
 			f[i] = 1f;
