@@ -22,16 +22,16 @@ public class ConeLight extends PositionalLight {
 	 * @param rays
 	 *            number of rays - more rays make light to look more realistic
 	 *            but will decrease performance, can't be less than MIN_RAYS
-	 * @param directionDegree
-	 *            direction of cone light
-	 * @param distance
-	 *            distance of cone light
 	 * @param color
 	 *            color, set to {@code null} to use the default color
+	 * @param distance
+	 *            distance of cone light
 	 * @param x
 	 *            axis position
 	 * @param y
 	 *            axis position
+	 * @param directionDegree
+	 *            direction of cone light
 	 * @param coneDegree
 	 *            half-size of cone light, centered over direction
 	 */
