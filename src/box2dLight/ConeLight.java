@@ -4,22 +4,36 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 
 /**
- * Light is data container for all the light parameters You can create instance
- * of Light also with help of rayHandler addLight method
+ * Light shaped as a circle's sector with given radius, direction and angle
+ * 
+ * <p>Extends {@link PositionalLight}
+ * 
+ * @author kalle_h
  */
 public class ConeLight extends PositionalLight {
 
 	float coneDegree;
 
 	/**
+	 * Creates light shaped as a circle's sector with given radius, direction and arc angle
+	 * 
 	 * @param rayHandler
+	 *            not {@code null} instance of RayHandler
 	 * @param rays
+	 *            number of rays - more rays make light to look more realistic
+	 *            but will decrease performance, can't be less than MIN_RAYS
 	 * @param directionDegree
+	 *            direction of cone light
 	 * @param distance
+	 *            distance of cone light
 	 * @param color
+	 *            color, set to {@code null} to use the default color
 	 * @param x
+	 *            axis position
 	 * @param y
+	 *            axis position
 	 * @param coneDegree
+	 *            half-size of cone light, centered over direction
 	 */
 	public ConeLight(RayHandler rayHandler, int rays, Color color,
 			float distance, float x, float y, float directionDegree,
@@ -28,12 +42,16 @@ public class ConeLight extends PositionalLight {
 		super(rayHandler, rays, color, distance, x, y, directionDegree);
 		setConeDegree(coneDegree);
 		setDirection(direction);
-		update();
+	}
+	
+	@Override
+	public void update () {
+		if (dirty) setEndPoints();
+		super.update();
 	}
 
-	public void setDirection(float direction) {
-
-		this.direction = direction;
+	/** Updates lights sector basing on distance, direction and coneDegree **/
+	protected void setEndPoints() {
 		for (int i = 0; i < rayNum; i++) {
 			float angle = direction + coneDegree - 2f * coneDegree * i
 					/ (rayNum - 1f);
@@ -42,41 +60,46 @@ public class ConeLight extends PositionalLight {
 			endX[i] = distance * c;
 			endY[i] = distance * s;
 		}
-		if (staticLight) dirty = true;
 	}
 
 	/**
-	 * @return the coneDegree
+	 * Sets light direction
+	 * <p>Actual recalculations will be done only on {@link #update()} call
 	 */
-	public final float getConeDegree() {
+	public void setDirection(float direction) {
+		this.direction = direction;
+		dirty = true;
+	}
+
+	/**
+	 * @return this lights coneDegree 
+	 */
+	public float getConeDegree() {
 		return coneDegree;
-
 	}
 
 	/**
-	 * How big is the arc of cone. Arc angle = coneDegree * 2
+	 * How big is the arc of cone
 	 * 
-	 * @param coneDegree
-	 *            the coneDegree to set
+	 * <p>Arc angle = coneDegree * 2, centered over direction angle
+	 * <p>Actual recalculations will be done only on {@link #update()} call
+	 * 
 	 */
-	public final void setConeDegree(float coneDegree) {
-		if (coneDegree < 0)
-			coneDegree = 0;
-		if (coneDegree > 180)
-			coneDegree = 180;
-		this.coneDegree = coneDegree;
-		setDirection(direction);
+	public void setConeDegree(float coneDegree) {
+		this.coneDegree = MathUtils.clamp(coneDegree, 0f, 180f);
+		dirty = true;
 	}
 
 	/**
-	 * setDistance(float dist) MIN capped to 1cm
+	 * Sets light distance
 	 * 
-	 * @param dist
+	 * <p>MIN value capped to 0.1f meter
+	 * <p>Actual recalculations will be done only on {@link #update()} call
 	 */
 	public void setDistance(float dist) {
 		dist *= RayHandler.gammaCorrectionParameter;
 		this.distance = dist < 0.01f ? 0.01f : dist;
-		setDirection(direction);
+		dirty = true;
 	}
 
 }
