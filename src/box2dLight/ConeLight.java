@@ -41,25 +41,18 @@ public class ConeLight extends PositionalLight {
 
 		super(rayHandler, rays, color, distance, x, y, directionDegree);
 		setConeDegree(coneDegree);
-		setDirection(direction);
 	}
 	
 	@Override
 	public void update () {
+		updateBody();
 		if (dirty) setEndPoints();
-		super.update();
-	}
-
-	/** Updates lights sector basing on distance, direction and coneDegree **/
-	protected void setEndPoints() {
-		for (int i = 0; i < rayNum; i++) {
-			float angle = direction + coneDegree - 2f * coneDegree * i
-					/ (rayNum - 1f);
-			final float s = sin[i] = MathUtils.sinDeg(angle);
-			final float c = cos[i] = MathUtils.cosDeg(angle);
-			endX[i] = distance * c;
-			endY[i] = distance * s;
-		}
+		
+		if (cull()) return;
+		if (staticLight && !dirty) return;
+		
+		dirty = false;
+		updateMesh();
 	}
 
 	/**
@@ -72,7 +65,7 @@ public class ConeLight extends PositionalLight {
 	}
 
 	/**
-	 * @return this lights coneDegree 
+	 * @return this lights cone degree
 	 */
 	public float getConeDegree() {
 		return coneDegree;
@@ -100,6 +93,18 @@ public class ConeLight extends PositionalLight {
 		dist *= RayHandler.gammaCorrectionParameter;
 		this.distance = dist < 0.01f ? 0.01f : dist;
 		dirty = true;
+	}
+	
+	/** Updates lights sector basing on distance, direction and coneDegree **/
+	protected void setEndPoints() {
+		for (int i = 0; i < rayNum; i++) {
+			float angle = direction + coneDegree - 2f * coneDegree * i
+					/ (rayNum - 1f);
+			final float s = sin[i] = MathUtils.sinDeg(angle);
+			final float c = cos[i] = MathUtils.cosDeg(angle);
+			endX[i] = distance * c;
+			endY[i] = distance * s;
+		}
 	}
 
 }

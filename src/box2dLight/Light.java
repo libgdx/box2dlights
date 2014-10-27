@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.Disposable;
  * {@link #remove()} and added manually by calling {@link #add(RayHandler)}.
  * 
  * <p>Implements {@link Disposable}
+ * 
  * @author kalle_h
  */
 public abstract class Light implements Disposable {
@@ -52,7 +53,8 @@ public abstract class Light implements Disposable {
 	protected float[] f;
 	protected int m_index = 0;
 
-	/** Creates new active light and automatically adds it to the specified
+	/** 
+	 * Creates new active light and automatically adds it to the specified
 	 * {@link RayHandler} instance.
 	 * 
 	 * @param rayHandler
@@ -62,43 +64,96 @@ public abstract class Light implements Disposable {
 	 *            but will decrease performance, can't be less than MIN_RAYS
 	 * @param color
 	 *            light color
-	 * @param directionDegree
-	 *            direction in degrees (if applicable) 
 	 * @param distance
 	 *            light distance (if applicable)
+	 * @param directionDegree
+	 *            direction in degrees (if applicable) 
 	 */
 	public Light(RayHandler rayHandler, int rays, Color color,
-			float directionDegree, float distance) {
-
+			float distance, float directionDegree) {
 		rayHandler.lightList.add(this);
 		this.rayHandler = rayHandler;
 		setRayNum(rays);
-		setDirection(directionDegree);
-		setDistance(distance);
 		setColor(color);
+		setDistance(distance);
+		setDirection(directionDegree);
 	}
 
-
+	/**
+	 * Updates this light
+	 */
 	abstract void update();
 
+	/**
+	 * Render this light
+	 */
 	abstract void render();
 	
 	/**
-	 * Sets light distance if applicable
+	 * Sets light distance
 	 * 
 	 * <p>NOTE: MIN value should be capped to 0.1f meter
 	 */
 	public abstract void setDistance(float dist);
 
 	/**
-	 * Sets light direction if applicable
+	 * Sets light direction
 	 */
 	public abstract void setDirection(float directionDegree);
 	
 	/**
+	 * Attaches light to specified body
+	 * 
+	 * @param body
+	 *            that will be automatically followed, note that the body
+	 *            rotation angle is taken into account for the light offset
+	 *            and direction calculations
+	 */
+	public abstract void attachToBody(Body body);
+	
+	/**
+	 * @return attached body or {@code null}
+	 * 
+	 * @see #attachToBody(Body, float, float)
+	 */
+	public abstract Body getBody();
+
+	/**
+	 * Sets light starting position
+	 * 
+	 * @see #setPosition(Vector2)
+	 */
+	public abstract void setPosition(float x, float y);
+
+	/**
+	 * Sets light starting position
+	 * 
+	 * @see #setPosition(float, float)
+	 */
+	public abstract void setPosition(Vector2 position);
+
+	/**
+	 * @return horizontal starting position of light in world coordinates
+	 */
+	public abstract float getX();
+
+	/**
+	 * @return vertical starting position of light in world coordinates
+	 */
+	public abstract float getY();
+	
+	/**
+	 * @return starting position of light in world coordinates
+	 *         <p>NOTE: changing this vector does nothing
+	 */
+	public Vector2 getPosition() {
+		return tmpPosition;
+	}
+	
+	/**
 	 * Sets light color
 	 * 
-	 * <p>NOTE: you can also use colorless light with shadows (EG 0,0,0,1)
+	 * <p>NOTE: you can also use colorless light with shadows, e.g. (0,0,0,1)
 	 * 
 	 * @param newColor
 	 *            RGB set the color and Alpha set intensity
@@ -118,7 +173,7 @@ public abstract class Light implements Disposable {
 	/**
 	 * Sets light color
 	 * 
-	 * <p>NOTE: you can also use colorless light with shadows (EG 0,0,0,1)
+	 * <p>NOTE: you can also use colorless light with shadows, e.g. (0,0,0,1)
 	 * 
 	 * @param r
 	 *            lights color red component
@@ -170,73 +225,8 @@ public abstract class Light implements Disposable {
 	}
 
 	/**
-	 * Attaches light to specified body
-	 * 
-	 * <p>NOTE: not applicable for {@link DirectionalLight}
-	 * 
-	 * @param body
-	 *            that will be automatically followed, note that the body
-	 *            rotation angle is taken into account for the light offset
-	 *            and direction calculations
-	 * @param offsetX
-	 *            horizontal relative offset in world coordinates
-	 * @param offsetY
-	 *            vertical relative offset in world coordinates
-	 * 
+	 * @return if this light is active
 	 */
-	public abstract void attachToBody(Body body, float offsetX, float offsetY);
-
-	/**
-	 * @return attached body or <code>null</code> if not set
-	 * 
-	 *         <p>NOTE: {@link DirectionalLight} always return
-	 *         <code>null</code>
-	 * 
-	 * @see #attachToBody(Body, float, float)
-	 */
-	public abstract Body getBody();
-
-	/**
-	 * Sets light starting position
-	 * 
-	 * <p>NOTE: not applicable for {@link DirectionalLight}
-	 * 
-	 * @see #setPosition(Vector2)
-	 */
-	public abstract void setPosition(float x, float y);
-
-	/**
-	 * Sets light starting position
-	 * 
-	 * <p>NOTE: not applicable for {@link DirectionalLight}
-	 * 
-	 * @see #setPosition(float, float)
-	 */
-	public abstract void setPosition(Vector2 position);
-
-	/**
-	 * @return starting position of light in world coordinates
-	 *         or zero vector for {@link DirectionalLight}
-	 * 
-	 *         <p>NOTE: changing this vector does nothing
-	 */
-	public Vector2 getPosition() {
-		return tmpPosition;
-	}
-
-	/**
-	 * @return horizontal starting position of light in world coordinates
-	 *         or 0 for {@link DirectionalLight}
-	 */
-	public abstract float getX();
-
-	/**
-	 * @return vertical starting position of light in world coordinates
-	 *         or 0 for {@link DirectionalLight}
-	 */
-	public abstract float getY();
-
-	/** @return if this light is active **/
 	public boolean isActive() {
 		return active;
 	}
@@ -288,7 +278,7 @@ public abstract class Light implements Disposable {
 	 *         lights that you want to collide with static geometry but ignore
 	 *         all the dynamic objects.
 	 */
-	public final boolean isStaticLight() {
+	public boolean isStaticLight() {
 		return staticLight;
 	}
 
@@ -316,15 +306,14 @@ public abstract class Light implements Disposable {
 	/**
 	 * Enables/disables softness on tips of this light beams
 	 */
-	public final void setSoft(boolean soft) {
+	public void setSoft(boolean soft) {
 		this.soft = soft;
 		if (staticLight) dirty = true;
 	}
 
 	/**
 	 * @return softness value for beams tips
-	 * 
-	 *         <p>Default: <code>2.5f</code>
+	 *         <p>Default: {@code 2.5f}
 	 */
 	public float getSoftShadowLength() {
 		return softShadowLength;
@@ -333,29 +322,13 @@ public abstract class Light implements Disposable {
 	/**
 	 * Sets softness value for beams tips
 	 * 
-	 * <p>Default: <code>2.5f</code>
+	 * <p>Default: {@code 2.5f}
 	 */
 	public void setSoftnessLength(float softShadowLength) {
 		this.softShadowLength = softShadowLength;
 		if (staticLight) dirty = true;
 	}
-
 	
-	protected void setRayNum(int rays) {
-
-		if (rays < MIN_RAYS)
-			rays = MIN_RAYS;
-
-		rayNum = rays;
-		vertexNum = rays + 1;
-
-		segments = new float[vertexNum * 8];
-		mx = new float[vertexNum];
-		my = new float[vertexNum];
-		f = new float[vertexNum];
-
-	}
-
 	/**
 	 * @return current color of this light
 	 */
@@ -380,8 +353,23 @@ public abstract class Light implements Disposable {
 		return false;
 	}
 
+	/**
+	 * Internal method for mesh update depending on ray number
+	 */
+	void setRayNum(int rays) {
+		if (rays < MIN_RAYS)
+			rays = MIN_RAYS;
 
-	/** light filter **/
+		rayNum = rays;
+		vertexNum = rays + 1;
+
+		segments = new float[vertexNum * 8];
+		mx = new float[vertexNum];
+		my = new float[vertexNum];
+		f = new float[vertexNum];
+	}
+
+	/** Global lights filter **/
 	static private Filter filterA = null;
 
 	final RayCastCallback ray = new RayCastCallback() {
