@@ -388,6 +388,8 @@ public class ChainLight extends Light {
 	 * Applies attached body initial transform to all lights rays
 	 */
 	void applyAttachment() {
+		if (body == null || staticLight) return;
+		
 		restorePosition.setToTranslation(bodyPosition);
 		rotateAroundZero.setToRotationRad(bodyAngle + bodyAngleOffset);
 		for (int i = 0; i < rayNum; i++) {
