@@ -117,7 +117,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 			// final Color c = new Color(MathUtils.random()*0.4f,
 			// MathUtils.random()*0.4f,
 			// MathUtils.random()*0.4f, 1f);
-			Light light = new PointLight(rayHandler, RAYS_PER_BALL);
+			PointLight light = new PointLight(rayHandler, RAYS_PER_BALL);
 			light.setDistance(LIGHT_DISTANCE);
 			// Light light = new ConeLight(rayHandler, RAYS_PER_BALL, null,
 			// LIGHT_DISTANCE, 0, 0, 0, 60);
@@ -150,7 +150,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 
     Body body = balls.get(BALLSNUM - 1);
     body.setTransform(0, 10, 0);
-    chainLight3.attachToBody(body, 1, 1);
+    chainLight3.attachToBody(body, 45f);
 		
 		/** BOX2D LIGHT STUFF END */
 
