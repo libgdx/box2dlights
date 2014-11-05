@@ -5,6 +5,7 @@ import shaders.LightShader;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -129,6 +130,29 @@ public class RayHandler implements Disposable {
 		lightMap = new LightMap(this, fboWidth, fboHeigth);
 		lightShader = LightShader.createLightShader();
 	}
+	
+	/**
+	 * Sets combined matrix basing on camera position, rotation and zoom
+	 * 
+	 * <p> Same as calling:
+	 * {@code setCombinedMatrix(
+	 *                camera.combined,
+	 *                camera.position.x,
+	 *                camera.position.y,
+	 *                camera.viewportWidth * camera.zoom,
+	 *                camera.viewportHeight * camera.zoom );}
+	 * 
+	 * @see #setCombinedMatrix(Matrix4)
+	 * @see #setCombinedMatrix(Matrix4, float, float, float, float)
+	 */
+	public void setCombinedMatrix(OrthographicCamera camera) {
+		this.setCombinedMatrix(
+				camera.combined,
+				camera.position.x,
+				camera.position.y,
+				camera.viewportWidth * camera.zoom,
+				camera.viewportHeight * camera.zoom);
+	}
 
 	/**
 	 * Sets combined camera matrix.
@@ -146,6 +170,7 @@ public class RayHandler implements Disposable {
 	 * @param combined
 	 *            matrix that include projection and translation matrices
 	 * 
+	 * @see #setCombinedMatrix(OrthographicCamera)
 	 * @see #setCombinedMatrix(Matrix4, float, float, float, float)
 	 */
 	public void setCombinedMatrix(Matrix4 combined) {
@@ -188,6 +213,7 @@ public class RayHandler implements Disposable {
 	 *            NOTE!! use actual size, remember to multiple with zoom value
 	 *            if pulled from OrthoCamera
 	 * 
+	 * @see #setCombinedMatrix(OrthographicCamera)
 	 * @see #setCombinedMatrix(Matrix4)
 	 */
 	public void setCombinedMatrix(Matrix4 combined, float x, float y,
