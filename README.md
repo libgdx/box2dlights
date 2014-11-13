@@ -12,6 +12,7 @@ Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android
  * Point light
  * Cone Light
  * Directional Light
+ * Chain Light [New in 1.3]
  * Shadows
  * Dynamic/static/xray light
  * Culling
@@ -32,12 +33,12 @@ Box2DLights is also available in Maven Central. Add the following dependency to 
     <dependency>
       <groupId>com.badlogicgames.box2dlights</groupId>
       <artifactId>box2dlights</artifactId>
-      <version>1.2</version>
+      <version>1.3</version>
     </dependency>
     
 If you use Gradle, add the following dependency to your build.gradle file, in the dependencies block of the core project:
 
-     compile "com.badlogicgames.box2dlights:box2dlights:1.2"
+     compile "com.badlogicgames.box2dlights:box2dlights:1.3"
 
 ## Maintenance Note
 Box2dlights was moved from Google Code to Github to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
