@@ -93,7 +93,7 @@ public class DirectionalLight extends Light {
 			xAxelOffSet = 1;
 			yAxelOffSet = 1;
 		}
-
+		
 		final float widthOffSet = sizeOfScreen * -sin;
 		final float heightOffSet = sizeOfScreen * cos;
 
@@ -238,5 +238,21 @@ public class DirectionalLight extends Light {
 	@Override
 	public void setDistance(float dist) {
 	}
+	
+	/** Not applicable for this light type **/
+	@Deprecated
+	@Override
+	public void setIgnoreAttachedBody(boolean flag) {
+	}
+	
+	/** Not applicable for this light type
+	 * <p>Always return {@code false}
+	 **/
+	@Deprecated
+	@Override
+	public boolean getIgnoreAttachedBody() {
+		return false;
+	}
+
 
 }
