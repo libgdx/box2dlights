@@ -1,14 +1,12 @@
 package shaders;
 
-import box2dLight.RayHandler;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public final class LightShader {
-	static final public ShaderProgram createLightShader() {
+	static final public ShaderProgram createLightShader(boolean gammaCorrection) {
 		String gamma = ""; 
-		if (RayHandler.getGammaCorrection())
+		if (gammaCorrection)
 			gamma = "sqrt";
 		
 		final String vertexShader = 

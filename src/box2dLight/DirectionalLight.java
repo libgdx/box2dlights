@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.World;
 
 /**
  * Light which source is at infinite distance
@@ -69,7 +70,7 @@ public class DirectionalLight extends Light {
 	}
 
 	@Override
-	public void setDirection (float direction) {
+	public void setDirection(float direction) {
 		this.direction = direction;
 		sin = MathUtils.sinDeg(direction);
 		cos = MathUtils.cosDeg(direction);
@@ -77,12 +78,12 @@ public class DirectionalLight extends Light {
 	}
 	
 	@Override
-	void update () {
+	public void update() {
 		if (staticLight && !dirty) return;
 		dirty = false;
 
-		final float width = (rayHandler.x2 - rayHandler.x1);
-		final float height = (rayHandler.y2 - rayHandler.y1);
+		final float width = (lightHandler.x2 - lightHandler.x1);
+		final float height = (lightHandler.y2 - lightHandler.y1);
 		final float sizeOfScreen = width > height ? width : height;
 
 		float xAxelOffSet = sizeOfScreen * cos;
@@ -97,8 +98,8 @@ public class DirectionalLight extends Light {
 		final float widthOffSet = sizeOfScreen * -sin;
 		final float heightOffSet = sizeOfScreen * cos;
 
-		float x = (rayHandler.x1 + rayHandler.x2) * 0.5f - widthOffSet;
-		float y = (rayHandler.y1 + rayHandler.y2) * 0.5f - heightOffSet;
+		float x = (lightHandler.x1 + lightHandler.x2) * 0.5f - widthOffSet;
+		float y = (lightHandler.y1 + lightHandler.y2) * 0.5f - heightOffSet;
 
 		final float portionX = 2f * widthOffSet / (rayNum - 1);
 		x = (MathUtils.floor(x / (portionX * 2))) * portionX * 2;
@@ -114,8 +115,9 @@ public class DirectionalLight extends Light {
 			mx[i] = end[i].x = steppedX + xAxelOffSet;
 			my[i] = end[i].y = steppedY + yAxelOffSet;
 
-			if (rayHandler.world != null && !xray) {
-				rayHandler.world.rayCast(ray, start[i], end[i]);
+			World world = lightHandler.getWorld();
+			if (world != null && !xray) {
+				world.rayCast(ray, start[i], end[i]);
 			}
 		}
 
@@ -154,19 +156,23 @@ public class DirectionalLight extends Light {
 	}
 
 	@Override
-	void render () {
-		rayHandler.lightRenderedLastFrame++;
+	public void render() {
+		lightHandler.lightsRenderedLastFrame++;
 		lightMesh.render(
-				rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
+				shader,
+				GL20.GL_TRIANGLE_STRIP,
+				0, vertexNum);
 		
 		if (soft && !xray) {
 			softShadowMesh.render(
-				rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
+					shader,
+					GL20.GL_TRIANGLE_STRIP,
+					0, vertexNum);
 		}
 	}
 	
 	@Override
-	public boolean contains (float x, float y) {
+	public boolean contains(float x, float y) {
 		boolean oddNodes = false;
 		float x2 = mx[rayNum] = start[0].x;
 		float y2 = my[rayNum] = start[0].y;
@@ -191,13 +197,13 @@ public class DirectionalLight extends Light {
 	/** Not applicable for this light type **/
 	@Deprecated
 	@Override
-	public void attachToBody (Body body) {
+	public void attachToBody(Body body) {
 	}
 	
 	/** Not applicable for this light type **/
 	@Deprecated
 	@Override
-	public void setPosition (float x, float y) {
+	public void setPosition(float x, float y) {
 	}
 
 	/** Not applicable for this light type
@@ -205,7 +211,7 @@ public class DirectionalLight extends Light {
 	 **/
 	@Deprecated
 	@Override
-	public Body getBody () {
+	public Body getBody() {
 		return null;
 	}
 
@@ -214,7 +220,7 @@ public class DirectionalLight extends Light {
 	 **/
 	@Deprecated
 	@Override
-	public float getX () {
+	public float getX() {
 		return 0;
 	}
 
@@ -223,14 +229,14 @@ public class DirectionalLight extends Light {
 	 **/
 	@Deprecated
 	@Override
-	public float getY () {
+	public float getY() {
 		return 0;
 	}
 
 	/** Not applicable for this light type **/
 	@Deprecated
 	@Override
-	public void setPosition (Vector2 position) {
+	public void setPosition(Vector2 position) {
 	}
 
 	/** Not applicable for this light type **/
@@ -253,6 +259,5 @@ public class DirectionalLight extends Light {
 	public boolean getIgnoreAttachedBody() {
 		return false;
 	}
-
 
 }
