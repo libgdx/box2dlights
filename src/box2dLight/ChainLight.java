@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.Pools;
 
@@ -130,7 +131,7 @@ public class ChainLight extends Light {
 	}
 	
 	@Override
-	void update() {
+	public void update() {
 		if (dirty) {
 			updateChain();
 			applyAttachment();
@@ -146,16 +147,16 @@ public class ChainLight extends Light {
 	}
 	
 	@Override
-	void render() {
-		if (rayHandler.culling && culled) return;
+	public void render() {
+		if (lightHandler.isCulling() && culled) return;
 		
-		rayHandler.lightRenderedLastFrame++;
+		lightHandler.lightsRenderedLastFrame++;
 		lightMesh.render(
-			rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
+				shader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
 		
 		if (soft && !xray) {
 			softShadowMesh.render(
-				rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
+					shader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
 		}
 	}
 	
@@ -269,7 +270,7 @@ public class ChainLight extends Light {
 	 */
 	@Override
 	public void setDistance(float dist) {
-		dist *= RayHandler.gammaCorrectionParameter;
+		dist *= gammaCorrectionValue;
 		this.distance = dist < 0.01f ? 0.01f : dist;
 		dirty = true;
 	}
@@ -403,7 +404,7 @@ public class ChainLight extends Light {
 	}
 	
 	protected boolean cull() {
-		if (!rayHandler.culling) {
+		if (!lightHandler.isCulling()) {
 			culled = false;
 		} else {
 			updateBoundingRects();
@@ -448,8 +449,10 @@ public class ChainLight extends Light {
 			my[i] = tmpEnd.y;
 			tmpStart.x = startX[i];
 			tmpStart.y = startY[i];
-			if (rayHandler.world != null && !xray) {
-				rayHandler.world.rayCast(ray, tmpStart, tmpEnd);
+			
+			World world = lightHandler.getWorld();
+			if (world != null && !xray) {
+				world.rayCast(ray, tmpStart, tmpEnd);
 			}
 		}
 		setMesh();
@@ -506,8 +509,10 @@ public class ChainLight extends Light {
 		}
 		chainLightBounds.set(minX, minY, maxX - minX, maxY - minY);
 		rayHandlerBounds.set(
-			rayHandler.x1, rayHandler.y1,
-			rayHandler.x2 - rayHandler.x1, rayHandler.y2 - rayHandler.y1);
+				lightHandler.x1,
+				lightHandler.y1,
+				lightHandler.x2 - lightHandler.x1,
+				lightHandler.y2 - lightHandler.y1);
 	}
 	
 }

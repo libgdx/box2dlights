@@ -44,7 +44,7 @@ public class ConeLight extends PositionalLight {
 	}
 	
 	@Override
-	public void update () {
+	public void update() {
 		updateBody();
 		if (dirty) setEndPoints();
 		
@@ -90,7 +90,7 @@ public class ConeLight extends PositionalLight {
 	 * <p>Actual recalculations will be done only on {@link #update()} call
 	 */
 	public void setDistance(float dist) {
-		dist *= RayHandler.gammaCorrectionParameter;
+		dist *= gammaCorrectionValue;
 		this.distance = dist < 0.01f ? 0.01f : dist;
 		dirty = true;
 	}

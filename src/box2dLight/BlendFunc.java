@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 
 /**
  * Helper class that stores source and destination factors for blending
+ * 
+ * @author rinold
  */
 public class BlendFunc {
 	

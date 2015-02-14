@@ -1,5 +1,5 @@
 
-package box2dLight;
+package box2dLight.p3d;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -10,18 +10,17 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.Fixture;
 
 /**
  * Abstract base class for all positional lights
  * 
  * <p>Extends {@link Light}
  * 
- * @author kalle_h
+ * @author rinold
  */
-public abstract class PositionalLight extends Light {
-
-	protected final Vector2 tmpEnd = new Vector2();
+public abstract class P3dPositionalLight extends P3dLight {
+	
 	protected final Vector2 start = new Vector2();
 	
 	protected Body body;
@@ -34,7 +33,7 @@ public abstract class PositionalLight extends Light {
 
 	protected float endX[];
 	protected float endY[];
-	
+
 	/** 
 	 * Creates new positional light and automatically adds it to the specified
 	 * {@link RayHandler} instance.
@@ -55,17 +54,20 @@ public abstract class PositionalLight extends Light {
 	 * @param directionDegree
 	 *            direction in degrees (if applicable) 
 	 */
-	public PositionalLight(RayHandler rayHandler, int rays, Color color, float distance, float x, float y, float directionDegree) {
-		super(rayHandler, rays, color, distance, directionDegree);
+	public P3dPositionalLight(P3dLightManager lightManager, int rays, Color color, float distance, float x, float y, float directionDegree) {
+		super(lightManager, rays, color, distance, directionDegree);
 		start.x = x;
 		start.y = y;
+		
+		setRayNum(rays);
 
-		lightMesh = new Mesh(VertexDataType.VertexArray, false, vertexNum, 0, new VertexAttribute(Usage.Position, 2,
-			"vertex_positions"), new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
-			new VertexAttribute(Usage.Generic, 1, "s"));
-		softShadowMesh = new Mesh(VertexDataType.VertexArray, false, vertexNum * 2, 0, new VertexAttribute(Usage.Position, 2,
-			"vertex_positions"), new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
-			new VertexAttribute(Usage.Generic, 1, "s"));
+		lightMesh = new Mesh(
+				VertexDataType.VertexArray,
+				false, vertexNum, 0,
+				new VertexAttribute(Usage.Position, 2, "vertex_positions"),
+				new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
+				new VertexAttribute(Usage.Generic, 1, "s"));
+		
 		setMesh();
 	}
 	
@@ -77,6 +79,7 @@ public abstract class PositionalLight extends Light {
 		if (staticLight && !dirty) return;
 		
 		dirty = false;
+		
 		updateMesh();
 	}
 	
@@ -86,16 +89,7 @@ public abstract class PositionalLight extends Light {
 
 		lightHandler.lightsRenderedLastFrame++;
 		lightMesh.render(
-				shader,
-				GL20.GL_TRIANGLE_FAN,
-				0, vertexNum);
-		
-		if (soft && !xray) {
-			softShadowMesh.render(
-					shader,
-					GL20.GL_TRIANGLE_STRIP,
-					0, (vertexNum - 1) * 2);
-		}
+				shader, GL20.GL_TRIANGLE_FAN, 0, vertexNum);
 	}
 	
 	@Override
@@ -187,25 +181,14 @@ public abstract class PositionalLight extends Light {
 		final float dst2 = x_d * x_d + y_d * y_d;
 		if (distance * distance <= dst2) return false;
 
-		// actual check
-		boolean oddNodes = false;
-		float x2 = mx[rayNum] = start.x;
-		float y2 = my[rayNum] = start.y;
-		float x1, y1;
-		for (int i = 0; i <= rayNum; x2 = x1, y2 = y1, ++i) {
-			x1 = mx[i];
-			y1 = my[i];
-			if (((y1 < y) && (y2 >= y)) || (y1 >= y) && (y2 < y)) {
-				if ((y - y1) / (y2 - y1) * (x2 - x1) < (x - x1)) oddNodes = !oddNodes;
-			}
-		}
-		return oddNodes;
+		// TODO: actual check
+		return true;
 	}
 	
-	@Override
 	protected void setRayNum(int rays) {
-		super.setRayNum(rays);
-		
+		rayNum = rays;
+		vertexNum = rays + 1;
+		segments = new float[vertexNum * 8];
 		sin = new float[rays];
 		cos = new float[rays];
 		endX = new float[rays];
@@ -214,7 +197,7 @@ public abstract class PositionalLight extends Light {
 	
 	protected boolean cull() {
 		culled = lightHandler.isCulling() && !lightHandler.intersect(
-					start.x, start.y, distance + softShadowLength);
+					start.x, start.y, distance);
 		return culled;
 	}
 	
@@ -233,55 +216,39 @@ public abstract class PositionalLight extends Light {
 	}
 	
 	protected void updateMesh() {
-		for (int i = 0; i < rayNum; i++) {
-			m_index = i;
-			f[i] = 1f;
-			tmpEnd.x = endX[i] + start.x;
-			mx[i] = tmpEnd.x;
-			tmpEnd.y = endY[i] + start.y;
-			my[i] = tmpEnd.y;
-			
-			World world = lightHandler.getWorld();
-			if (world != null && !xray) {
-				world.rayCast(ray, start, tmpEnd);
-			}
-		}
 		setMesh();
+	}
+	
+	protected void prepeareFixtureData() {
+		affectedFixtures.clear();
+		lightHandler.getWorld().QueryAABB(
+				dynamicShadowCallback,
+				start.x - distance, start.y - distance,
+				start.x + distance, start.y + distance);
 	}
 
 	protected void setMesh() {
 		// ray starting point
 		int size = 0;
+		float colorF = color.cpy().mul(1f / P3dLightManager.colorReduction).toFloatBits();
 
 		segments[size++] = start.x;
 		segments[size++] = start.y;
 		segments[size++] = colorF;
-		segments[size++] = 1;
+		segments[size++] = 1f;
 		// rays ending points.
 		for (int i = 0; i < rayNum; i++) {
-			segments[size++] = mx[i];
-			segments[size++] = my[i];
+			segments[size++] = start.x + endX[i];
+			segments[size++] = start.y + endY[i];
 			segments[size++] = colorF;
-			segments[size++] = 1 - f[i];
-		}
-		lightMesh.setVertices(segments, 0, size);
-
-		if (!soft || xray) return;
-
-		size = 0;
-		// rays ending points.
-		for (int i = 0; i < rayNum; i++) {
-			segments[size++] = mx[i];
-			segments[size++] = my[i];
-			segments[size++] = colorF;
-			final float s = (1 - f[i]);
-			segments[size++] = s;
-			segments[size++] = mx[i] + s * softShadowLength * cos[i];
-			segments[size++] = my[i] + s * softShadowLength * sin[i];
-			segments[size++] = zeroColorBits;
 			segments[size++] = 0f;
 		}
-		softShadowMesh.setVertices(segments, 0, size);
+		lightMesh.setVertices(segments, 0, size);
+	}
+	
+	@Override
+	protected boolean onDynamicCallback(Fixture fixture) {
+		return fixture.getBody() != body;
 	}
 	
 }

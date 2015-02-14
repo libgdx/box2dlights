@@ -68,7 +68,7 @@ public class PointLight extends PositionalLight {
 	 */
 	@Override
 	public void setDistance(float dist) {
-		dist *= RayHandler.gammaCorrectionParameter;
+		dist *= gammaCorrectionValue;
 		this.distance = dist < 0.01f ? 0.01f : dist;
 		dirty = true;
 	}
