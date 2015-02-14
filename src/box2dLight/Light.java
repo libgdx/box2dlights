@@ -21,6 +21,11 @@ import com.badlogic.gdx.physics.box2d.RayCastCallback;
 public abstract class Light extends BaseLight {
 
 	protected boolean soft = true;
+	protected boolean xray = false;
+	protected boolean staticLight = false;
+	protected boolean culled = false;
+	protected boolean dirty = true;
+	protected boolean ignoreBody = false;
 
 	protected int rayNum;
 	protected int vertexNum;
@@ -110,7 +115,25 @@ public abstract class Light extends BaseLight {
 	public boolean contains(float x, float y) {
 		return false;
 	}
-
+	
+	/**
+	 * Sets if the attached body fixtures should be ignored during raycasting
+	 * 
+	 * @param flag - if {@code true} all the fixtures of attached body
+	 *               will be ignored and will not create any shadows for this
+	 *               light. By default is set to {@code false}. 
+	 */
+	public void setIgnoreAttachedBody(boolean flag) {
+		ignoreBody = flag;
+	}
+	
+	/**
+	 * @return if the attached body fixtures will be ignored during raycasting
+	 */
+	public boolean getIgnoreAttachedBody() {
+		return ignoreBody;
+	}
+	
 	/**
 	 * Internal method for mesh update depending on ray number
 	 */
@@ -134,7 +157,7 @@ public abstract class Light extends BaseLight {
 		@Override
 		final public float reportRayFixture(Fixture fixture, Vector2 point,
 				Vector2 normal, float fraction) {
-
+			
 			if ((filterA != null) && !contactFilter(fixture))
 				return -1;
 

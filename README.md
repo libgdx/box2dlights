@@ -1,5 +1,6 @@
-# Box2DLights
-[![screenshot](http://img.youtube.com/vi/lfT8ajGbzk0/0.jpg)](http://www.youtube.com/watch?v=lfT8ajGbzk0)
+# Box2DLights - Pseudo 3d development branch
+
+[![screenshot](http://img.youtube.com/vi/8Jc5Xyy4yJU/0.jpg)](http://youtu.be/8Jc5Xyy4yJU)
 
 Kalle Hameleinen's Box2DLights is a 2D lighting framework that uses [box2d](http://box2d.org/) for raycasting and OpenGL ES 2.0 for rendering. This library is intended to be used with [libgdx](http://libgdx.com).
 
@@ -12,6 +13,7 @@ Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android
  * Point light
  * Cone Light
  * Directional Light
+ * Chain Light [New in 1.3]
  * Shadows
  * Dynamic/static/xray light
  * Culling
@@ -32,12 +34,12 @@ Box2DLights is also available in Maven Central. Add the following dependency to 
     <dependency>
       <groupId>com.badlogicgames.box2dlights</groupId>
       <artifactId>box2dlights</artifactId>
-      <version>1.2</version>
+      <version>1.3</version>
     </dependency>
     
 If you use Gradle, add the following dependency to your build.gradle file, in the dependencies block of the core project:
 
-     compile "com.badlogicgames.box2dlights:box2dlights:1.2"
+     compile "com.badlogicgames.box2dlights:box2dlights:1.3"
 
 ## Maintenance Note
 Box2dlights was moved from Google Code to Github to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
