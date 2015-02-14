@@ -1,5 +1,6 @@
-# Box2DLights
-[![screenshot](http://img.youtube.com/vi/lfT8ajGbzk0/0.jpg)](http://www.youtube.com/watch?v=lfT8ajGbzk0)
+# Box2DLights - Pseudo 3d development branch
+
+[![screenshot](http://img.youtube.com/vi/8Jc5Xyy4yJU/0.jpg)](http://youtu.be/8Jc5Xyy4yJU)
 
 Kalle Hameleinen's Box2DLights is a 2D lighting framework that uses [box2d](http://box2d.org/) for raycasting and OpenGL ES 2.0 for rendering. This library is intended to be used with [libgdx](http://libgdx.com).
 
