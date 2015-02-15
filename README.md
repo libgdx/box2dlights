@@ -1,45 +1,22 @@
-# Box2DLights - Pseudo 3d development branch
+# Box2DLights - Pseudo 3d [development]
 
 [![screenshot](http://img.youtube.com/vi/8Jc5Xyy4yJU/0.jpg)](http://youtu.be/8Jc5Xyy4yJU)
 
-Kalle Hameleinen's Box2DLights is a 2D lighting framework that uses [box2d](http://box2d.org/) for raycasting and OpenGL ES 2.0 for rendering. This library is intended to be used with [libgdx](http://libgdx.com).
+This is the pseudo-3d implementation based on Kalle Hameleinen's Box2DLights.
 
-Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android) to see the library in action.
+It provides simple dynamic limited length fixtures-shaped shadows for 2d games with the "from top" camera view, where you can control the third pseudo dimension - "height" for both physics fixtures and lights.
 
-## Features
+This is in a quite an early development stage, so not everything is supported, and not everything works without bugs.
 
- * Arbitrary number of lights
- * Gaussian blurred light maps
- * Point light
- * Cone Light
- * Directional Light
- * Chain Light [New in 1.3]
- * Shadows
- * Dynamic/static/xray light
- * Culling
- * Colored ambient light
- * Gamma corrected colors
- * Handler class to do all the work
- * Query method for testing is point inside of light/shadow
+## Currently supported lights and fixture shapes:
+ * Point Light
+ * Directional Light (in progress)
 
-This library offer easy way to add soft dynamic 2d lights to your physic based game. Rendering use libgdx but it would be easy to port this to other frameworks or pure openGl too.
-
-## Usage
- * Download the [latest Box2DLights release](http://libgdx.badlogicgames.com/box2dlights/)
- * Add the box2dlights.jar file to your libgdx core project's classpath
- * Check out the [Wiki](https://github.com/libgdx/box2dlights/wiki)
-
-Box2DLights is also available in Maven Central. Add the following dependency to your libgdx core project:
-
-    <dependency>
-      <groupId>com.badlogicgames.box2dlights</groupId>
-      <artifactId>box2dlights</artifactId>
-      <version>1.3</version>
-    </dependency>
-    
-If you use Gradle, add the following dependency to your build.gradle file, in the dependencies block of the core project:
-
-     compile "com.badlogicgames.box2dlights:box2dlights:1.3"
+## Fixture shapes:
+   * PolygonShape
+   * CircleShape
+   * ChainShape (in progress)
+   * EndgeShape (in progress)
 
 ## Maintenance Note
 Box2dlights was moved from Google Code to Github to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
