@@ -28,8 +28,6 @@ public abstract class BaseLightHandler implements Disposable {
 	protected static final float GAMMA_COR = 0.625f;
 	protected static boolean gammaCorrection = false;
 	
-	protected static boolean diffuse = false;
-	
 	/**
 	 * Blend function for lights rendering with both shadows and diffusion
 	 * 
@@ -94,28 +92,6 @@ public abstract class BaseLightHandler implements Disposable {
 	public float x1, x2, y1, y2;
 
 	protected World world;
-	
-	/**
-	 * Enables/disables usage of diffuse algorithm
-	 * 
-	 * <p>If set to true lights are blended using the diffuse shader. This is
-	 * more realistic model than normally used as it preserve colors but might
-	 * look bit darker and also it might improve performance slightly.
-	 */
-	public static void setDiffuseLight(boolean flag) {
-		diffuse = flag;
-	}
-	
-	/**
-	 * @return if the usage of diffuse algorithm is enabled 
-	 * 
-	 * <p>If set to true lights are blended using the diffuse shader. This is
-	 * more realistic model than normally used as it preserve colors but might
-	 * look bit darker and also it might improve performance slightly.
-	 */
-	public static boolean isDiffuseLight() {
-		return diffuse;
-	}
 
 	/**
 	 * Enables/disables gamma correction.

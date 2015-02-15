@@ -90,24 +90,12 @@ public class P3dPointLight extends P3dPositionalLight {
 	
 	protected void updateDynamicShadowMeshes() {
 		activeShadows = 0;
-		
-		//float colBits = lightHandler.getAmbientLight().toFloatBits();
-		//float colorBits = this.color.cpy().mul(0.5f).toFloatBits();
 		for (Fixture fixture : affectedFixtures) {
 			P3dData data = (P3dData)fixture.getUserData();
 			if (data == null || fixture.isSensor()) continue;
 			
 			int size = 0;
 			float l = 0f;
-			
-			/*
-			float startColBits = rayHandler.shadowColorInterpolation ?
-					Color.BLACK.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
-					zeroColorBits;
-			float endColBits = rayHandler.shadowColorInterpolation ?
-					Color.WHITE.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
-					colBits;
-			*/
 			
 			Shape fixtureShape = fixture.getShape();
 			Type type = fixtureShape.getType();
