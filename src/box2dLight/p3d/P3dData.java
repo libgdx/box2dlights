@@ -28,8 +28,6 @@ public class P3dData {
 			l = distance * height / (lightHeight - height);
 			float diff = lightRange - distance;
 			if (l > diff) l = diff;
-		} else if (lightHeight == 0f) {
-			l = lightRange;
 		} else {
 			l = lightRange - distance;
 		}

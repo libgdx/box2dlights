@@ -18,6 +18,30 @@ import com.badlogic.gdx.utils.Disposable;
  */
 public class RayHandler extends BaseLightHandler {
 	
+	protected static boolean diffuse = false;
+	
+	/**
+	 * Enables/disables usage of diffuse algorithm
+	 * 
+	 * <p>If set to true lights are blended using the diffuse shader. This is
+	 * more realistic model than normally used as it preserve colors but might
+	 * look bit darker and also it might improve performance slightly.
+	 */
+	public static void setDiffuseLight(boolean flag) {
+		diffuse = flag;
+	}
+	
+	/**
+	 * @return if the usage of diffuse algorithm is enabled 
+	 * 
+	 * <p>If set to true lights are blended using the diffuse shader. This is
+	 * more realistic model than normally used as it preserve colors but might
+	 * look bit darker and also it might improve performance slightly.
+	 */
+	public static boolean isDiffuseLight() {
+		return diffuse;
+	}
+	
 	/**
 	 * Class constructor specifying the physics world from where collision
 	 * geometry is taken.
