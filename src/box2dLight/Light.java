@@ -206,15 +206,23 @@ public abstract class Light implements Disposable {
 	}
 
 	/**
-	 * Removes light from specified RayHandler
+	 * Removes light from specified RayHandler and disposes it
 	 */
 	public void remove() {
+		remove(true);
+	}
+	
+	/**
+	 * Removes light from specified RayHandler and disposes it if requested
+	 */
+	public void remove(bool doDispose) {
 		if (active) {
 			rayHandler.lightList.removeValue(this, false);
 		} else {
 			rayHandler.disabledLights.removeValue(this, false);
 		}
 		rayHandler = null;
+		if (doDispose) dispose();
 	}
 
 	/**
