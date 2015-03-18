@@ -216,7 +216,6 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		if (lights.size() > 0) {
 			for (Light light : lights) {
 				light.remove();
-				light.dispose();
 			}
 			lights.clear();
 		}
