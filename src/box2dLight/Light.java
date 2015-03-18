@@ -115,7 +115,7 @@ public abstract class Light implements Disposable {
 	/**
 	 * @return attached body or {@code null}
 	 * 
-	 * @see #attachToBody(Body, float, float)
+	 * @see #attachToBody(Body)
 	 */
 	public abstract Body getBody();
 
