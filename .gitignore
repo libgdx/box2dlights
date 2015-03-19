@@ -1,7 +1,9 @@
 .classpath
 .project
 .settings/
+.idea/
 libs/
 target/
 *.class
 *.jar
+*.iml

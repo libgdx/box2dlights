@@ -115,7 +115,7 @@ public abstract class Light implements Disposable {
 	/**
 	 * @return attached body or {@code null}
 	 * 
-	 * @see #attachToBody(Body, float, float)
+	 * @see #attachToBody(Body)
 	 */
 	public abstract Body getBody();
 
@@ -215,7 +215,7 @@ public abstract class Light implements Disposable {
 	/**
 	 * Removes light from specified RayHandler and disposes it if requested
 	 */
-	public void remove(bool doDispose) {
+	public void remove(boolean doDispose) {
 		if (active) {
 			rayHandler.lightList.removeValue(this, false);
 		} else {
