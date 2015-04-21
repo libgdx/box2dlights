@@ -3,7 +3,7 @@ package tests;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
-public class DesktopLauncher2 {
+public class CustomShaderDesktopLauncher {
 
 	public static void main(String[] argv) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
@@ -15,7 +15,7 @@ public class DesktopLauncher2 {
 		config.vSyncEnabled = true;
 
 		config.fullscreen = false;
-		new LwjglApplication(new Box2dLightTest2(), config);
+		new LwjglApplication(new Box2dLightCustomShaderTest(), config);
 	}
 
 }

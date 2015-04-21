@@ -12,10 +12,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
@@ -25,10 +22,10 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import java.util.ArrayList;
 
-public class Box2dLightTest2 extends InputAdapter implements ApplicationListener {
+public class Box2dLightCustomShaderTest extends InputAdapter implements ApplicationListener {
 	
 	static final int RAYS_PER_BALL = 64;
-	static final int BALLSNUM = 1;
+	static final int BALLSNUM = 8;
 	static final float LIGHT_DISTANCE = 16f;
 	static final float RADIUS = 1f;
 	
@@ -75,13 +72,13 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 
 	Texture bg, bgN;
 
-	Texture reactorTex, reactorTexN;
-	TextureRegion reactorReg, reactorRegN;
+	TextureRegion objectReg, objectRegN;
 
 	FrameBuffer normalFbo;
-	Array<Asset> assetArray = new Array<Asset>();
+	Array<DeferredObject> assetArray = new Array<DeferredObject>();
 
 	ShaderProgram lightShader;
+	ShaderProgram normalShader;
 
 	@Override
 	public void create() {
@@ -111,7 +108,9 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		RayHandler.setGammaCorrection(true);
 		RayHandler.useDiffuseLight(true);
 
-		lightShader = createShader();
+		normalShader = createNormalShader();
+
+		lightShader = createLightShader();
 		rayHandler = new RayHandler(world, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()) {
 			@Override protected void updateLightShader () {}
 
@@ -124,31 +123,36 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		};
 		rayHandler.setLightShader(lightShader);
 		rayHandler.setAmbientLight(0.1f, 0.1f, 0.1f, 0.5f);
-		rayHandler.setBlurNum(0);
-//		rayHandler.setBlurNum(3);
+		rayHandler.setBlurNum(3);
+//		rayHandler.setBlurNum(0);
 
 		initPointLights();
 		/** BOX2D LIGHT STUFF END */
 
 
-		reactorTex = new Texture(Gdx.files.internal("data/object-deferred.png"));
-		reactorTexN = new Texture(Gdx.files.internal("data/object-deferred-n.png"));
-		reactorReg = new TextureRegion(reactorTex);
-		reactorRegN = new TextureRegion(reactorTexN);
+		objectReg = new TextureRegion(new Texture(Gdx.files.internal("data/object-deferred.png")));
+		objectRegN = new TextureRegion(new Texture(Gdx.files.internal("data/object-deferred-n.png")));
 
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 3; y++) {
-				Asset asset = new Asset(reactorReg, reactorRegN);
-				asset.x = 4 + x * (asset.diffuse.getRegionWidth()*SCALE + 8);
-				asset.y = 4 + y * (asset.diffuse.getRegionHeight()*SCALE + 7);
-				asset.color.set(MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), 1);
-				asset.rotation = MathUtils.random(360);
-				assetArray.add(asset);
+				DeferredObject deferredObject = new DeferredObject(objectReg, objectRegN);
+				deferredObject.x = 4 + x * (deferredObject.diffuse.getRegionWidth()*SCALE + 8);
+				deferredObject.y = 4 + y * (deferredObject.diffuse.getRegionHeight()*SCALE + 7);
+				deferredObject.color.set(MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), 1);
+				if (x > 0)
+					deferredObject.rot = true;
+				if (x == 2)
+					deferredObject.rotation = 45;
+				if (x == 3)
+					deferredObject.rotation = 90;
+				assetArray.add(deferredObject);
 			}
 		}
 	}
 
-	private ShaderProgram createShader () {
+	private ShaderProgram createLightShader () {
+		// Shader adapted from https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson6
+		// broken for chain lights
 		final String vertexShader =
 			"attribute vec4 vertex_positions;\n" //
 				+ "attribute vec4 quad_colors;\n" //
@@ -170,23 +174,23 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 			+ "uniform vec2 u_resolution;\n" //
 			+ "varying vec4 v_color;\n" //
 			+ "uniform sampler2D u_normals;\n" //
-			+ "uniform vec4 LightColor;\n" //
 			+ "void main()\n"//
 			+ "{\n"
-			+ "vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
-			+ "vec3 NormalMap = texture2D(u_normals, screenPos).rgb; "
-			+ "vec3 LightDir = vec3(LightPos.xy - screenPos, 0.05);\n"
+			+ "  vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
+			+ "  vec3 NormalMap = texture2D(u_normals, screenPos).rgb; "
+			+ "  vec3 LightDir = vec3(LightPos.xy - screenPos, 0.05);\n"
 
-			+ "float D = length(LightDir);\n"
+			+ "  float D = length(LightDir);\n"
 
-			+ "vec3 N = normalize(NormalMap * 2.0 - 1.0);\n"
-			+ "vec3 L = normalize(LightDir);\n"
+			+ "  vec3 N = normalize(NormalMap * 2.0 - 1.0);\n"
 
-			+ "float Attenuation = 1.0 / ( 2. + (12*D) + (100*D*D) );\n "
+			+ "  vec3 L = normalize(LightDir);\n"
 
-			+ "float maxProd = max(dot(N, L), 0.0);\n"
+			+ " float Attenuation = 1.0 / ( .4 + (3*D) + (20*D*D) );\n "
+
+			+ " float maxProd = max(dot(N, L), 0.0);\n"
 			+ "" //
-			+ "  gl_FragColor = v_color * 2 * vec4(vec3(maxProd), 1.0);\n" //
+			+ "  gl_FragColor = v_color * maxProd * Attenuation * 3;\n" //
 			+ "}";
 
 		ShaderProgram.pedantic = false;
@@ -195,6 +199,7 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		if (!lightShader.isCompiled()) {
 			Gdx.app.log("ERROR", lightShader.getLog());
 		}
+
 		lightShader.begin();
 		lightShader.setUniformi("u_normals", 1);
 		lightShader.end();
@@ -202,6 +207,51 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		return lightShader;
 	}
 
+	private ShaderProgram createNormalShader () {
+		String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
+			+ "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
+			+ "attribute vec2 " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
+			+ "uniform mat4 u_projTrans;\n" //
+			+ "varying vec4 v_color;\n" //
+			+ "varying vec2 v_texCoords;\n" //
+			+ "\n" //
+			+ "void main()\n" //
+			+ "{\n" //
+			+ "   v_color = " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
+			+ "   v_color.a = v_color.a * (255.0/254.0);\n" //
+			+ "   v_texCoords = " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
+			+ "   gl_Position =  u_projTrans * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
+			+ "}\n";
+		String fragmentShader = "#ifdef GL_ES\n" //
+			+ "#define LOWP lowp\n" //
+			+ "precision mediump float;\n" //
+			+ "#else\n" //
+			+ "#define LOWP \n" //
+			+ "#endif\n" //
+			+ "varying LOWP vec4 v_color;\n" //
+			+ "varying vec2 v_texCoords;\n" //
+			+ "uniform sampler2D u_texture;\n" //
+			+ "uniform mat3 u_rotMatrix;\n" //
+			+ "uniform float u_rot;\n" //
+			+ "void main()\n"//
+			+ "{\n" //
+			// most of this should be done in vertex shader
+			+ "  vec2 rad = vec2(-sin(u_rot), cos(u_rot));\n" //
+			+ "  vec3 normal = texture2D(u_texture, v_texCoords).rgb;\n" //
+			// got to translate normal vector to -1, 1 range
+			+ "  vec2 rotated = mat2(rad.y, -rad.x, rad.x, rad.y) * (normal.xy * 2.0 - 1.0);\n" //
+			// and back to 0, 1
+			+ "  rotated = (rotated.xy/ 2.0 + 0.5 );\n" //
+			+ "  gl_FragColor = vec4(rotated.xy, normal.z, 1.);\n" //
+			+ "}";
+
+		ShaderProgram shader = new ShaderProgram(vertexShader, fragmentShader);
+		if (!shader.isCompiled()) throw new IllegalArgumentException("Error compiling shader: " + shader.getLog());
+		return shader;
+	}
+
+	boolean drawNormals = false;
+	Color bgColor = new Color();
 	@Override
 	public void render() {
 		
@@ -218,10 +268,14 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.setProjectionMatrix(camera.combined);
-
+		for (DeferredObject deferredObject :assetArray) {
+			deferredObject.update();
+		}
 		normalFbo.begin();
 		batch.disableBlending();
 		batch.begin();
+		batch.setShader(normalShader);
+		normalShader.setUniformf("u_rot", 0f);
 		float bgWidth = bgN.getWidth() * SCALE;
 		float bgHeight = bgN.getHeight() * SCALE;
 		for (int x = 0; x < 6; x++) {
@@ -230,8 +284,12 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 			}
 		}
 		batch.enableBlending();
-		for (Asset asset:assetArray) {
-			asset.drawNormal(batch);
+		for (DeferredObject deferredObject :assetArray) {
+			normalShader.setUniformf("u_rot", MathUtils.degreesToRadians * deferredObject.rotation);
+			deferredObject.drawNormal(batch);
+			// flush batch or uniform wont change
+			// TODO this is baaaad, maybe modify SpriteBatch to add rotation in the attributes? Flushing after each defeats the point of batch
+			batch.flush();
 		}
 		batch.end();
 		normalFbo.end();
@@ -240,15 +298,42 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 
 		batch.disableBlending();
 		batch.begin();
-		for (int x = 0; x < 6; x++) {
-			for (int y = 0; y < 6; y++) {
-				batch.draw(bg, x * bgWidth, y * bgHeight, bgWidth, bgHeight);
+		batch.setShader(null);
+		if (drawNormals) {
+			// draw flipped so it looks ok
+			batch.draw(normals, 0, 0, // x, y
+				viewportWidth / 2, viewportHeight / 2, // origx, origy
+				viewportWidth, viewportHeight, // width, height
+				1, 1, // scale x, y
+				0,// rotation
+				0, 0, normals.getWidth(), normals.getHeight(), // tex dimensions
+				false, true); // flip x, y
+		} else {
+			for (int x = 0; x < 6; x++) {
+				for (int y = 0; y < 6; y++) {
+					batch.setColor(bgColor.set(x/5.0f, y/6.0f, 0.5f, 1));
+					batch.draw(bg, x * bgWidth, y * bgHeight, bgWidth, bgHeight);
+				}
+			}
+			batch.setColor(Color.WHITE);
+			batch.enableBlending();
+			for (DeferredObject deferredObject :assetArray) {
+				deferredObject.draw(batch);
 			}
 		}
-		batch.enableBlending();
-		for (Asset asset:assetArray) {
-			asset.draw(batch);
+		batch.end();
+
+		/** BOX2D LIGHT STUFF BEGIN */
+		if (!drawNormals) {
+			rayHandler.setCombinedMatrix(camera);
+			if (stepped) rayHandler.update();
+			normals.bind(1);
+			rayHandler.render();
 		}
+		/** BOX2D LIGHT STUFF END */
+
+		batch.begin();
+		batch.enableBlending();
 		for (int i = 0; i < BALLSNUM; i++) {
 			Body ball = balls.get(i);
 			Vector2 position = ball.getPosition();
@@ -262,13 +347,6 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 				angle);
 		}
 		batch.end();
-
-		/** BOX2D LIGHT STUFF BEGIN */
-		rayHandler.setCombinedMatrix(camera);
-		if (stepped) rayHandler.update();
-		normals.bind(1);
-		rayHandler.render();
-		/** BOX2D LIGHT STUFF END */
 
 		long time = System.nanoTime();
 
@@ -299,8 +377,11 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 					"F5 - random lights colors",
 					0, Gdx.graphics.getHeight() - 75);
 			font.draw(batch,
-					"F6 - random lights distance",
-					0, Gdx.graphics.getHeight() - 90);
+				"F6 - random lights distance",
+				0, Gdx.graphics.getHeight() - 90);
+			font.draw(batch,
+				"F7 - toggle drawing of normals",
+				0, Gdx.graphics.getHeight() - 105);
 			font.draw(batch,
 					"F9 - default blending (1.3)",
 					0, Gdx.graphics.getHeight() - 120);
@@ -548,8 +629,8 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		rayHandler.dispose();
 		world.dispose();
 
-		reactorTex.dispose();
-		reactorTexN.dispose();
+		objectReg.getTexture().dispose();
+		objectRegN.getTexture().dispose();
 
 		normalFbo.dispose();
 	}
@@ -603,13 +684,16 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 						MathUtils.random(),
 						1f);
 			return true;
-			
+
 		case Input.Keys.F6:
 			for (Light light : lights)
-				light.setDistance(MathUtils.random(
-						LIGHT_DISTANCE * 0.5f, LIGHT_DISTANCE * 2f));
+				light.setDistance(MathUtils.random(LIGHT_DISTANCE * 0.5f, LIGHT_DISTANCE * 2f));
 			return true;
-			
+
+		case Input.Keys.F7:
+			drawNormals = !drawNormals;
+			return true;
+
 		case Input.Keys.F9:
 			rayHandler.diffuseBlendFunc.reset();
 			return true;
@@ -654,6 +738,7 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 	@Override
 	public void resize(int width, int height) {
 		viewport.update(width, height, true);
+		// TODO this probably shouldnt break when set multiple times
 		if (once) {
 			lightShader.begin();
 			lightShader.setUniformf("u_resolution", width, height);
@@ -669,19 +754,28 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 	public void resume() {
 	}
 
-	private static class Asset {
+	private static class DeferredObject {
 		TextureRegion diffuse;
 		TextureRegion normal;
-		public Color color = new Color(Color.WHITE);
-		public float x, y;
-		public float width, height;
-		public float rotation;
+		Color color = new Color(Color.WHITE);
+		float x, y;
+		float width, height;
+		float rotation;
+		boolean rot;
 
-		public Asset(TextureRegion diffuse, TextureRegion normal) {
+		public DeferredObject (TextureRegion diffuse, TextureRegion normal) {
 			this.diffuse = diffuse;
 			this.normal = normal;
 			width = diffuse.getRegionWidth() * SCALE;
 			height = diffuse.getRegionHeight() * SCALE;
+		}
+
+		public void update() {
+			if (rot) {
+				rotation += 1f;
+				if (rotation > 360)
+					rotation = 0;
+			}
 		}
 
 		public void drawNormal(Batch batch) {
