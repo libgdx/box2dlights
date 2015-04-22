@@ -209,11 +209,15 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			+ "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
 			+ "attribute vec2 " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
 			+ "uniform mat4 u_projTrans;\n" //
+			+ "uniform float u_rot;\n" //
 			+ "varying vec4 v_color;\n" //
 			+ "varying vec2 v_texCoords;\n" //
+			+ "varying mat2 v_rot;\n" //
 			+ "\n" //
 			+ "void main()\n" //
 			+ "{\n" //
+			+ "   vec2 rad = vec2(-sin(u_rot), cos(u_rot));\n" //
+			+ "   v_rot = mat2(rad.y, -rad.x, rad.x, rad.y);\n" //
 			+ "   v_color = " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
 			+ "   v_color.a = v_color.a * (255.0/254.0);\n" //
 			+ "   v_texCoords = " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
@@ -227,18 +231,15 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			+ "#endif\n" //
 			+ "varying LOWP vec4 v_color;\n" //
 			+ "varying vec2 v_texCoords;\n" //
+			+ "varying mat2 v_rot;\n" //
 			+ "uniform sampler2D u_texture;\n" //
-			+ "uniform mat3 u_rotMatrix;\n" //
-			+ "uniform float u_rot;\n" //
 			+ "void main()\n"//
 			+ "{\n" //
-			// most of this should be done in vertex shader
-			+ "  vec2 rad = vec2(-sin(u_rot), cos(u_rot));\n" //
 			+ "  vec3 normal = texture2D(u_texture, v_texCoords).rgb;\n" //
 			// got to translate normal vector to -1, 1 range
-			+ "  vec2 rotated = mat2(rad.y, -rad.x, rad.x, rad.y) * (normal.xy * 2.0 - 1.0);\n" //
+			+ "  vec2 rotated = v_rot * (normal.xy * 2.0 - 1.0);\n" //
 			// and back to 0, 1
-			+ "  rotated = (rotated.xy/ 2.0 + 0.5 );\n" //
+			+ "  rotated = (rotated.xy / 2.0 + 0.5 );\n" //
 			+ "  gl_FragColor = vec4(rotated.xy, normal.z, 1.);\n" //
 			+ "}";
 
