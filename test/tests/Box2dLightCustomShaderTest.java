@@ -39,7 +39,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 	SpriteBatch batch;
 	BitmapFont font;
 	TextureRegion textureRegion;
-//	Texture bg;
 
 	/** our box2D world **/
 	World world;
@@ -67,8 +66,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 	ArrayList<Light> lights = new ArrayList<Light>(BALLSNUM);
 	
 	float sunDirection = -90f;
-
-	Box2DDebugRenderer debugRenderer;
 
 	Texture bg, bgN;
 
@@ -350,8 +347,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 		long time = System.nanoTime();
 
-		debugRenderer.render(world, camera.combined);
-
 		boolean atShadow = rayHandler.pointAtShadow(testPoint.x,
 				testPoint.y);
 		aika += System.nanoTime() - time;
@@ -522,7 +517,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		chainShape.dispose();
 		createBoxes();
 
-		debugRenderer = new Box2DDebugRenderer();
 	}
 
 	private void createBoxes() {
