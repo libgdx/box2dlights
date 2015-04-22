@@ -158,7 +158,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				+ "varying vec4 v_color;\n" //
 				+ "void main()\n" //
 				+ "{\n" //
-				+ "   v_color = s * quad_colors;\n" //
+				+ "   v_color = quad_colors;\n" //
 				+ "   gl_Position =  u_projTrans * vertex_positions;\n" //
 				+ "}\n";
 		final String fragmentShader = "#ifdef GL_ES\n" //
@@ -187,7 +187,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 			+ " float maxProd = max(dot(N, L), 0.0);\n"
 			+ "" //
-			+ "  gl_FragColor = v_color * maxProd * Attenuation * 3;\n" //
+			+ "  gl_FragColor = v_color * maxProd * Attenuation;\n" //
 			+ "}";
 
 		ShaderProgram.pedantic = false;
