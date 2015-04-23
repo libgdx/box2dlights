@@ -115,13 +115,13 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				// light position must be normalized
 				float x = (light.getX())/viewportWidth;
 				float y = (light.getY())/viewportHeight;
-				lightShader.setUniformf("LightPos", x, y, 0.05f);
+				lightShader.setUniformf("u_lightpos", x, y, 0.05f);
+				lightShader.setUniformf("u_intensity", 5);
 			}
 		};
 		rayHandler.setLightShader(lightShader);
 		rayHandler.setAmbientLight(0.1f, 0.1f, 0.1f, 0.5f);
 		rayHandler.setBlurNum(3);
-//		rayHandler.setBlurNum(0);
 
 		initPointLights();
 		/** BOX2D LIGHT STUFF END */
@@ -149,7 +149,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 	private ShaderProgram createLightShader () {
 		// Shader adapted from https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson6
-		// broken for chain lights
 		final String vertexShader =
 			"attribute vec4 vertex_positions;\n" //
 				+ "attribute vec4 quad_colors;\n" //
@@ -158,7 +157,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				+ "varying vec4 v_color;\n" //
 				+ "void main()\n" //
 				+ "{\n" //
-				+ "   v_color = quad_colors;\n" //
+				+ "   v_color = s * quad_colors;\n" //
 				+ "   gl_Position =  u_projTrans * vertex_positions;\n" //
 				+ "}\n";
 		final String fragmentShader = "#ifdef GL_ES\n" //
@@ -167,27 +166,24 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			+ "#else\n"
 			+ "#define MED \n"
 			+ "#endif\n" //
-			+ "uniform vec3 LightPos;\n" //
-			+ "uniform vec2 u_resolution;\n" //
 			+ "varying vec4 v_color;\n" //
 			+ "uniform sampler2D u_normals;\n" //
+			+ "uniform vec3 u_lightpos;\n" //
+			+ "uniform vec2 u_resolution;\n" //
+			+ "uniform float u_intensity = 1.0;\n" //
 			+ "void main()\n"//
 			+ "{\n"
 			+ "  vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
 			+ "  vec3 NormalMap = texture2D(u_normals, screenPos).rgb; "
-			+ "  vec3 LightDir = vec3(LightPos.xy - screenPos, LightPos.z);\n"
-
-			+ "  float D = length(LightDir);\n"
+			+ "  vec3 LightDir = vec3(u_lightpos.xy - screenPos, u_lightpos.z);\n"
 
 			+ "  vec3 N = normalize(NormalMap * 2.0 - 1.0);\n"
 
 			+ "  vec3 L = normalize(LightDir);\n"
 
-			+ " float Attenuation = 1.0 / ( .4 + (3*D) + (20*D*D) );\n "
-
-			+ " float maxProd = max(dot(N, L), 0.0);\n"
+			+ "  float maxProd = max(dot(N, L), 0.0);\n"
 			+ "" //
-			+ "  gl_FragColor = v_color * maxProd * Attenuation;\n" //
+			+ "  gl_FragColor = v_color * maxProd * u_intensity;\n" //
 			+ "}";
 
 		ShaderProgram.pedantic = false;
