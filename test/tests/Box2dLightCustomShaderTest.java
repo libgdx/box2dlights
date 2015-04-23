@@ -115,7 +115,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				// light position must be normalized
 				float x = (light.getX())/viewportWidth;
 				float y = (light.getY())/viewportHeight;
-				lightShader.setUniformf("LightPos", x, y);
+				lightShader.setUniformf("LightPos", x, y, 0.05f);
 			}
 		};
 		rayHandler.setLightShader(lightShader);
@@ -167,7 +167,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			+ "#else\n"
 			+ "#define MED \n"
 			+ "#endif\n" //
-			+ "uniform vec2 LightPos;\n" //
+			+ "uniform vec3 LightPos;\n" //
 			+ "uniform vec2 u_resolution;\n" //
 			+ "varying vec4 v_color;\n" //
 			+ "uniform sampler2D u_normals;\n" //
@@ -175,7 +175,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			+ "{\n"
 			+ "  vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
 			+ "  vec3 NormalMap = texture2D(u_normals, screenPos).rgb; "
-			+ "  vec3 LightDir = vec3(LightPos.xy - screenPos, 0.05);\n"
+			+ "  vec3 LightDir = vec3(LightPos.xy - screenPos, LightPos.z);\n"
 
 			+ "  float D = length(LightDir);\n"
 
