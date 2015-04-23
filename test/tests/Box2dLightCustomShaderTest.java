@@ -145,6 +145,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				assetArray.add(deferredObject);
 			}
 		}
+		once = false;
+		normalFbo = new FrameBuffer(Pixmap.Format.RGB565, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
 	}
 
 	private ShaderProgram createLightShader () {
@@ -195,6 +197,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 		lightShader.begin();
 		lightShader.setUniformi("u_normals", 1);
+		lightShader.setUniformf("u_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		lightShader.end();
 
 		return lightShader;
@@ -729,16 +732,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 	@Override
 	public void resize(int width, int height) {
 		viewport.update(width, height, true);
-		// TODO this probably shouldnt break when set multiple times
-		if (once) {
-			lightShader.begin();
-			lightShader.setUniformf("u_resolution", width, height);
-			lightShader.end();
-			once = false;
-		}
-		if (normalFbo!= null) {normalFbo.dispose();}
-		normalFbo = new FrameBuffer(Pixmap.Format.RGB565, width, height, false);
-
 	}
 
 	@Override
