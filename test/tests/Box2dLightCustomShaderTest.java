@@ -121,7 +121,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		};
 		rayHandler.setLightShader(lightShader);
 		rayHandler.setAmbientLight(0.1f, 0.1f, 0.1f, 0.5f);
-		rayHandler.setBlurNum(3);
+		rayHandler.setBlurNum(0);
 
 		initPointLights();
 		/** BOX2D LIGHT STUFF END */
