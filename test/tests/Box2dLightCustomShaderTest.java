@@ -38,7 +38,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 	SpriteBatch batch;
 	BitmapFont font;
-	TextureRegion textureRegion;
+//	TextureRegion textureRegion;
 
 	/** our box2D world **/
 	World world;
@@ -73,6 +73,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 	FrameBuffer normalFbo;
 	Array<DeferredObject> assetArray = new Array<DeferredObject>();
+	DeferredObject marble;
 
 	ShaderProgram lightShader;
 	ShaderProgram normalShader;
@@ -92,9 +93,16 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		batch = new SpriteBatch();
 		font = new BitmapFont();
 		font.setColor(Color.RED);
-		
-		textureRegion = new TextureRegion(new Texture(
-				Gdx.files.internal("data/marble.png")));
+
+		TextureRegion marbleD = new TextureRegion(new Texture(
+			Gdx.files.internal("data/marble.png")));
+
+		TextureRegion marbleN = new TextureRegion(new Texture(
+			Gdx.files.internal("data/marble-n.png")));
+
+		marble = new DeferredObject(marbleD, marbleN);
+		marble.width = RADIUS * 2;
+		marble.height = RADIUS * 2;
 
 		createPhysicsWorld();
 		Gdx.input.setInputProcessor(this);
@@ -234,12 +242,12 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			+ "uniform sampler2D u_texture;\n" //
 			+ "void main()\n"//
 			+ "{\n" //
-			+ "  vec3 normal = texture2D(u_texture, v_texCoords).rgb;\n" //
+			+ "  vec4 normal = texture2D(u_texture, v_texCoords).rgba;\n" //
 			// got to translate normal vector to -1, 1 range
 			+ "  vec2 rotated = v_rot * (normal.xy * 2.0 - 1.0);\n" //
 			// and back to 0, 1
 			+ "  rotated = (rotated.xy / 2.0 + 0.5 );\n" //
-			+ "  gl_FragColor = vec4(rotated.xy, normal.z, 1.);\n" //
+			+ "  gl_FragColor = vec4(rotated.xy, normal.z, normal.a);\n" //
 			+ "}";
 
 		ShaderProgram shader = new ShaderProgram(vertexShader, fragmentShader);
@@ -288,6 +296,18 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			// TODO this is baaaad, maybe modify SpriteBatch to add rotation in the attributes? Flushing after each defeats the point of batch
 			batch.flush();
 		}
+		for (int i = 0; i < BALLSNUM; i++) {
+			Body ball = balls.get(i);
+			Vector2 position = ball.getPosition();
+			float angle = MathUtils.radiansToDegrees * ball.getAngle();
+			marble.x = position.x - RADIUS;
+			marble.y = position.y - RADIUS;
+			marble.rotation = angle;
+			normalShader.setUniformf("u_rot", MathUtils.degreesToRadians * marble.rotation);
+			marble.drawNormal(batch);
+			// TODO same as above
+			batch.flush();
+		}
 		batch.end();
 		normalFbo.end();
 
@@ -317,6 +337,15 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			for (DeferredObject deferredObject :assetArray) {
 				deferredObject.draw(batch);
 			}
+			for (int i = 0; i < BALLSNUM; i++) {
+				Body ball = balls.get(i);
+				Vector2 position = ball.getPosition();
+				float angle = MathUtils.radiansToDegrees * ball.getAngle();
+				marble.x = position.x - RADIUS;
+				marble.y = position.y - RADIUS;
+				marble.rotation = angle;
+				marble.draw(batch);
+			}
 		}
 		batch.end();
 
@@ -328,22 +357,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			rayHandler.render();
 		}
 		/** BOX2D LIGHT STUFF END */
-
-		batch.begin();
-		batch.enableBlending();
-		for (int i = 0; i < BALLSNUM; i++) {
-			Body ball = balls.get(i);
-			Vector2 position = ball.getPosition();
-			float angle = MathUtils.radiansToDegrees * ball.getAngle();
-			batch.draw(
-				textureRegion,
-				position.x - RADIUS, position.y - RADIUS,
-				RADIUS, RADIUS,
-				RADIUS * 2, RADIUS * 2,
-				1f, 1f,
-				angle);
-		}
-		batch.end();
 
 		long time = System.nanoTime();
 
