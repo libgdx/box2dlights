@@ -146,10 +146,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				deferredObject.color.set(MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), 1);
 				if (x > 0)
 					deferredObject.rot = true;
-				if (x == 2)
-					deferredObject.rotation = 45;
-				if (x == 3)
-					deferredObject.rotation = 90;
+				deferredObject.rotation = MathUtils.random(90);
 				assetArray.add(deferredObject);
 			}
 		}
