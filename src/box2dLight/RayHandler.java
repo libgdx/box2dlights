@@ -75,7 +75,8 @@ public class RayHandler implements Disposable {
 
 	final LightMap lightMap;
 	final ShaderProgram lightShader;
-	
+	ShaderProgram customLightShader = null;
+
 	boolean culling = true;
 	boolean shadows = true;
 	boolean blur = true;
@@ -305,15 +306,17 @@ public class RayHandler implements Disposable {
 			Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		}
-
-		lightShader.begin();
+		ShaderProgram shader = customLightShader!=null? customLightShader:lightShader;
+		shader.begin();
 		{
-			lightShader.setUniformMatrix("u_projTrans", combined);
+			shader.setUniformMatrix("u_projTrans", combined);
+			if (customLightShader != null) updateLightShader();
 			for (Light light : lightList) {
+				if (customLightShader != null) updateLightShaderPerLight(light);
 				light.render();
 			}
 		}
-		lightShader.end();
+		shader.end();
 
 		if (useLightMap) {
 			if (customViewport) {
@@ -327,6 +330,33 @@ public class RayHandler implements Disposable {
 			}
 			lightMap.render();
 		}
+	}
+
+	/**
+	 * Called before light rendering start
+	 *
+	 * Override this if you are using custom light shader
+	 */
+	protected void updateLightShader () {
+
+	}
+
+	/**
+	 * Called for custom light shader before each light is rendered
+	 *
+	 * Override this if you are using custom light shader
+	 */
+	protected void updateLightShaderPerLight (Light light) {
+
+	}
+
+	/**
+	 * Set custom light shader, null to reset to default
+	 *
+	 * Changes will take effect next time #render() is called
+	 */
+	public void setLightShader (ShaderProgram customLightShader) {
+		this.customLightShader = customLightShader;
 	}
 
 	/**
