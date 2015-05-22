@@ -73,7 +73,7 @@ public class RayHandler implements Disposable {
 	 */
 	final Array<Light> disabledLights = new Array<Light>(false, 16);
 
-	final LightMap lightMap;
+	LightMap lightMap;
 	final ShaderProgram lightShader;
 	
 	boolean culling = true;
@@ -127,8 +127,18 @@ public class RayHandler implements Disposable {
 	public RayHandler(World world, int fboWidth, int fboHeigth) {
 		this.world = world;
 
-		lightMap = new LightMap(this, fboWidth, fboHeigth);
+		resizeFBO(fboWidth, fboHeigth);
 		lightShader = LightShader.createLightShader();
+	}
+
+	/**
+	 * Resize the FBO used for intermediate rendering.
+	 */
+	public void resizeFBO(int fboWidth, int fboHeight) {
+		if (lightMap != null) {
+			lightMap.dispose();
+		}
+		lightMap = new LightMap(this, fboWidth, fboHeight);
 	}
 	
 	/**
