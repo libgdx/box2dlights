@@ -125,10 +125,10 @@ public class RayHandler implements Disposable {
 	 * 
 	 * @see #RayHandler(World)
 	 */
-	public RayHandler(World world, int fboWidth, int fboHeigth) {
+	public RayHandler(World world, int fboWidth, int fboHeight) {
 		this.world = world;
 
-		resizeFBO(fboWidth, fboHeigth);
+		resizeFBO(fboWidth, fboHeight);
 		lightShader = LightShader.createLightShader();
 	}
 
