@@ -153,7 +153,6 @@ public class RayHandler implements Disposable {
 	 *                camera.viewportWidth * camera.zoom,
 	 *                camera.viewportHeight * camera.zoom );}
 	 * 
-	 * @see #setCombinedMatrix(Matrix4)
 	 * @see #setCombinedMatrix(Matrix4, float, float, float, float)
 	 */
 	public void setCombinedMatrix(OrthographicCamera camera) {
@@ -175,15 +174,13 @@ public class RayHandler implements Disposable {
 	 * <p>NOTE: Matrix4 is assumed to be orthogonal for culling
 	 * and directional lights.
 	 * 
-	 * <p>If any problems detected use the
-	 * {@link #setCombinedMatrix(Matrix4, float, float, float, float)} instead
-	 * 
 	 * @param combined
 	 *            matrix that include projection and translation matrices
 	 * 
-	 * @see #setCombinedMatrix(OrthographicCamera)
-	 * @see #setCombinedMatrix(Matrix4, float, float, float, float)
+	 * @deprecated use {@link #setCombinedMatrix(OrthographicCamera)} or
+	 * {@link #setCombinedMatrix(Matrix4, float, float, float, float)} instead
 	 */
+	@Deprecated
 	public void setCombinedMatrix(Matrix4 combined) {
 		System.arraycopy(combined.val, 0, this.combined.val, 0, 16);
 
@@ -225,7 +222,6 @@ public class RayHandler implements Disposable {
 	 *            if pulled from OrthoCamera
 	 * 
 	 * @see #setCombinedMatrix(OrthographicCamera)
-	 * @see #setCombinedMatrix(Matrix4)
 	 */
 	public void setCombinedMatrix(Matrix4 combined, float x, float y,
 			float viewPortWidth, float viewPortHeight) {
