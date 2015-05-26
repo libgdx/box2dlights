@@ -395,6 +395,14 @@ public abstract class Light implements Disposable {
 		my = new float[vertexNum];
 		f = new float[vertexNum];
 	}
+	
+	/** 
+	 * @return number of rays set for this light
+	 */
+	public int getRayNum()
+	{
+		return rayNum;
+	}
 
 	/** Global lights filter **/
 	static private Filter globalFilterA = null;
