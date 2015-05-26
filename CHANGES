@@ -1,0 +1,16 @@
+[1.4 - in progress]
+- [API Change] Light.setContactFilter(...) is now not static and light specific, the static method for all lights is now called setGlobalContactFilter(...)
+- [API Change] Deprecated the RayHandler.setCombinedMatrix(Matrix4) - use the setCombinedMatrix(OrthographicCamera) instead
+- Added ability to resize the HayHandler's FBO (thanks to piotr-j)
+- Added ability to set custom light shader for HayHandler (thanks to piotr-j)
+- Added Light.setIgnoreAttachedBody(bool) to allow light ignore all the bodies fixtures attached to
+- Added Light.getRayNum() method
+- Added Light.remove(bool) method with conditional disposing, so that light could be removed/added to rayHandler without re-creation
+- Fixed issue of box2dlights rendering incompatibility with ScreenUtils.getFrameBufferPixmap on some devices (issue #43)
+
+[1.3]
+- Added new ChainLight light type (thanks to sprucely) which which allows specifying a chain of vertices along one side of which rays are evenly distributed
+- Added RayHandler.setCombinedMatrix(OrthographicCamera) method
+- Added possibility to change the blending modes for basic, shadow and diffuse modes
+- Changed the default diffuse blending to more realistic (without light overburn effect)
+- Small improvement of performance for static lights updates
