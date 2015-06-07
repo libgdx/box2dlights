@@ -1,4 +1,5 @@
-[1.4 - in progress]
+[1.4]
+- Build against LibGDX 1.6.2
 - [API Change] Light.setContactFilter(...) is now not static and light specific, the static method for all lights is now called setGlobalContactFilter(...)
 - [API Change] Deprecated the RayHandler.setCombinedMatrix(Matrix4) - use the setCombinedMatrix(OrthographicCamera) instead
 - Added ability to resize the HayHandler's FBO (thanks to piotr-j)
