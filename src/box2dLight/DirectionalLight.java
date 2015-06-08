@@ -24,6 +24,9 @@ public class DirectionalLight extends Light {
 	protected final Vector2 end[];
 	protected float sin;
 	protected float cos;
+	
+	/** The body that could be set as ignored by this light type **/
+	protected Body body;
 
 	/**
 	 * Creates directional light which source is at infinite distance,
@@ -200,13 +203,10 @@ public class DirectionalLight extends Light {
 	public void setPosition (float x, float y) {
 	}
 
-	/** Not applicable for this light type
-	 * <p>Always return {@code null}
-	 **/
-	@Deprecated
+	/** Returns the ignored by this light body or {@code null} if not set **/
 	@Override
 	public Body getBody () {
-		return null;
+		return body;
 	}
 
 	/** Not applicable for this light type
@@ -254,5 +254,10 @@ public class DirectionalLight extends Light {
 		return false;
 	}
 
+	/** Sets the body to be ignored by this light, pass {@code null} to disable it **/
+	public void setIgnoreBody(Body body) {
+		this.body = body;
+		ignoreBody = (body != null);
+	}
 
 }
