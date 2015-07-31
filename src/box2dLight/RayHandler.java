@@ -29,8 +29,8 @@ public class RayHandler implements Disposable {
 	
 	
 	/** Set the Box2D world's pixel to meters scale. Useful for correct positing in {@link Light#attachToBody}.
-	 * Default value is zero. */
-	static public float BOX2D_WORLD_SCALE = 0; 
+	 * Default value is 1. */
+	static public float BOX2D_WORLD_SCALE = 1; 
 
 	static boolean gammaCorrection = false;
 	static float gammaCorrectionParameter = 1f;
