@@ -225,8 +225,8 @@ public abstract class PositionalLight extends Light {
 		final float sin = MathUtils.sin(angle);
 		final float dX = bodyOffsetX * cos - bodyOffsetY * sin;
 		final float dY = bodyOffsetX * sin + bodyOffsetY * cos;
-		start.x = vec.x + dX;
-		start.y = vec.y + dY;
+		start.x = vec.x * RayHandler.BOX2D_WORLD_SCALE + dX;
+		start.y = vec.y * RayHandler.BOX2D_WORLD_SCALE + dY;
 		setDirection(bodyAngleOffset + angle * MathUtils.radiansToDegrees);
 	}
 	
