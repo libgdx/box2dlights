@@ -352,6 +352,14 @@ public abstract class Light implements Disposable {
 		return distance / RayHandler.gammaCorrectionParameter;
 	}
 
+
+	/**
+	 * @return direction in degrees (0 if not applicable)
+	 */
+	public float getDirection(){
+		return direction;
+	}
+
 	/**
 	 * Checks if given point is inside of this light area
 	 * 
