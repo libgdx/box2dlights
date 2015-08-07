@@ -25,7 +25,7 @@ public class ConeLight extends PositionalLight {
 	 * @param color
 	 *            color, set to {@code null} to use the default color
 	 * @param distance
-	 *            distance of cone light
+	 *            distance of cone light, soft shadow length is set to distance * 0.1f
 	 * @param x
 	 *            axis position
 	 * @param y
