@@ -37,7 +37,7 @@ public class PointLight extends PositionalLight {
 	 * @param color
 	 *            color, set to {@code null} to use the default color
 	 * @param distance
-	 *            distance of light
+	 *            distance of light, soft shadow length is set to distance * 0.1f
 	 * @param x
 	 *            horizontal position in world coordinates
 	 * @param y

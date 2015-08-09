@@ -1,3 +1,6 @@
+[1.5]
+- Lights soft shadow length is set to distance * 0.1 on creation.
+
 [1.4]
 - Build against LibGDX 1.6.2
 - [API Change] Light.setContactFilter(...) is now not static and light specific, the static method for all lights is now called setGlobalContactFilter(...)
