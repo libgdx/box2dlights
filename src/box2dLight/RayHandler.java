@@ -284,29 +284,24 @@ public class RayHandler implements Disposable {
 	}
 
 	/**
-	 * Manual rendering method for all lights.
-	 * 
-	 * <p><b>NOTE!</b> Remember to set combined matrix and update lights
-	 * before using this method manually.
-	 * 
-	 * <p>Don't call this inside of any begin/end statements.
-	 * Call this method after you have rendered background but before UI.
-	 * Box2d bodies can be rendered before or after depending how you want
-	 * the x-ray lights to interact with them.
-	 * 
-	 * @see #updateAndRender()
-	 * @see #update()
-	 * @see #setCombinedMatrix(Matrix4)
-	 * @see #setCombinedMatrix(Matrix4, float, float, float, float)
+	 * Prepare all lights for rendering.
+	 *
+	 * <p>You should need to use this method only if you want to render lights
+	 * on a frame buffer object. Use {@link #render()} otherwise.
+	 *
+	 * <p><b>NOTE!</b> Don't call this inside of any begin/end statements.
+	 *
+	 * @see #renderOnly()
+	 * @see #render()
 	 */
-	public void render() {
+	public void prepareRender() {
 		lightRenderedLastFrame = 0;
 
 		Gdx.gl.glDepthMask(false);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		simpleBlendFunc.apply();
 
-		boolean useLightMap = (shadows || blur); 
+		boolean useLightMap = (shadows || blur);
 		if (useLightMap) {
 			lightMap.frameBuffer.begin();
 			Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
@@ -335,8 +330,48 @@ public class RayHandler implements Disposable {
 			} else {
 				lightMap.frameBuffer.end();
 			}
-			lightMap.render();
+
+			boolean needed = lightRenderedLastFrame > 0;
+			// this way lot less binding
+			if (needed && blur)
+				lightMap.gaussianBlur();
 		}
+	}
+
+	/**
+	 * Manual rendering method for all lights.
+	 *
+	 * <p><b>NOTE!</b> Remember to set combined matrix and update lights
+	 * before using this method manually.
+	 *
+	 * <p>Don't call this inside of any begin/end statements.
+	 * Call this method after you have rendered background but before UI.
+	 * Box2d bodies can be rendered before or after depending how you want
+	 * the x-ray lights to interact with them.
+	 *
+	 * @see #updateAndRender()
+	 * @see #update()
+	 * @see #setCombinedMatrix(Matrix4)
+	 * @see #setCombinedMatrix(Matrix4, float, float, float, float)
+	 */
+	public void render() {
+		prepareRender();
+		lightMap.render();
+	}
+
+	/**
+	 * Manual rendering method for all lights tha can be used inside of
+	 * begin/end statements
+	 *
+	 * <p>Use this method if you want to render lights in a frame buffer
+	 * object. You must call {@link #prepareRender()} before calling this
+	 * method. Also, {@link #prepareRender()} must not be inside of any
+	 * begin/end statements
+	 *
+	 * @see #prepareRender()
+	 */
+	public void renderOnly() {
+		lightMap.render();
 	}
 
 	/**
