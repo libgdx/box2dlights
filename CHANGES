@@ -1,5 +1,9 @@
+[1.6]
+- Lights soft shadow length is set to distance * 0.1 on creation.
+- Added smooth lights, drop-in replacement for current lights. Better looking but with a performance cost. See DesktopBenchmark and TestApp
+
 [1.5]
-- Added abitility render lights in frame buffer objects
+- Added ability render lights in frame buffer objects
 - Fixed Shader compilation problems on ATI graphic cards
 - Fixed ChainLight.update and .render access (now public as should)
 - Changed Lights soft shadow length to distance * 0.1 on creation
