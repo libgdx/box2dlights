@@ -53,21 +53,22 @@ public class TestApp extends ApplicationAdapter implements InputProcessor {
 		long seed = TimeUtils.nanoTime();
 		RayHandler.setGammaCorrection(false);
 		RayHandler.useDiffuseLight(true);
+		final int rayCount = 64;
 		smooth = new LightsView(seed) {
 			@Override public void setLightType (LightType type) {
 				if (light != null) light.remove(true);
 				switch (type) {
 				case POINT:
-					light = new SmoothPointLight(rayHandler, 32, Color.GREEN, 6, 0, 0, 96);
+					light = new SmoothPointLight(rayHandler, rayCount/4, Color.GREEN, 6, 0, 0, rayCount/4 * 3);
 					break;
 				case CONE:
-					light = new SmoothConeLight(rayHandler, 32, Color.GREEN, 6, 0, 0, 0, 45, 96);
+					light = new SmoothConeLight(rayHandler, rayCount/4, Color.GREEN, 6, 0, 0, 0, 45, rayCount/4 * 3);
 					break;
 				case LINE:
-					light = new SmoothLineLight(rayHandler, 32, Color.GREEN, 6, 1, 3, 96);
+					light = new SmoothLineLight(rayHandler, rayCount/4, Color.GREEN, 6, 1, 3, rayCount/4 * 3);
 					break;
 				case CHAIN:
-					light = new SmoothChainLight(rayHandler, 128, Color.GREEN, 6, 1, 1);
+					light = new SmoothChainLight(rayHandler, rayCount, Color.GREEN, 6, 1, 1);
 					((SmoothChainLight)light).createChain(new float[] {
 					0, 2.5f,
 					.5f, 2.5f/3,
@@ -75,8 +76,7 @@ public class TestApp extends ApplicationAdapter implements InputProcessor {
 					0, -2.5f});
 					break;
 				case DIRECTIONAL:
-					// cant we just use line light for this? just scale/position it so it always takes entire screen
-					light = new SmoothDirectionalLight(rayHandler, 16, Color.GREEN, 41, 180);
+					light = new SmoothDirectionalLight(rayHandler, rayCount/4 * 2, Color.GREEN, 41, rayCount/4 * 3 * 2);
 					break;
 				}
 				light.setColor(0, 1, 0, .75f);
@@ -91,26 +91,26 @@ public class TestApp extends ApplicationAdapter implements InputProcessor {
 				if (light != null) light.remove(true);
 				switch (type) {
 				case POINT:
-					light = new DebugPointLight(rayHandler, 128, Color.RED, 6, 0, 0);
+					light = new DebugPointLight(rayHandler, rayCount, Color.RED, 6, 0, 0);
 					break;
 				case CONE:
-					light = new DebugConeLight(rayHandler, 128, Color.RED, 6, 0, 0, 0, 45);
+					light = new DebugConeLight(rayHandler, rayCount, Color.RED, 6, 0, 0, 0, 45);
 					break;
 				case LINE:
 					// note: default ChainLight is fixed, doesnt more or rotate
-					light = new ChainLight(rayHandler, 128, Color.RED, 6, 1, new float[] {
+					light = new ChainLight(rayHandler, rayCount, Color.RED, 6, 1, new float[] {
 						-1.5f, 0, 1.5f, 0});
 					break;
 				case CHAIN:
 					// note: default ChainLight is fixed, doesnt more or rotate
-					light = new ChainLight(rayHandler, 128, Color.RED, 6, 1, new float[] {
+					light = new ChainLight(rayHandler, rayCount, Color.RED, 6, 1, new float[] {
 						0, 2.5f,
 						.5f, 2.5f/3,
 						-.5f, -2.5f/3,
 						0, -2.5f});
 					break;
 				case DIRECTIONAL:
-					light = new DebugDirectionalLight(rayHandler, 196, Color.RED, 41);
+					light = new DebugDirectionalLight(rayHandler, rayCount * 2, Color.RED, 41);
 					break;
 				}
 				light.setColor(1, 0, 0, .75f);
