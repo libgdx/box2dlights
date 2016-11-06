@@ -1,5 +1,6 @@
 [1.5]
 - Lights soft shadow length is set to distance * 0.1 on creation.
+- Added smooth lights, drop-in replacement for current lights. Better looking but with a performance cost. See DesktopBenchmark and TestApp
 
 [1.4]
 - Build against LibGDX 1.6.2

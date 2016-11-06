@@ -20,6 +20,7 @@ Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android
  * Gamma corrected colors
  * Handler class to do all the work
  * Query method for testing is point inside of light/shadow
+ * Optional smooth lights, better looking, lower performance, drop in replacement [See them on youtube](https://www.youtube.com/watch?v=24XHJPjpxy4)
 
 This library offer easy way to add soft dynamic 2d lights to your physic based game. Rendering use libgdx but it would be easy to port this to other frameworks or pure openGl too.
 
@@ -39,6 +40,10 @@ Box2DLights is also available in Maven Central. Add the following dependency to 
 If you use Gradle, add the following dependency to your build.gradle file, in the dependencies block of the core project:
 
      compile "com.badlogicgames.box2dlights:box2dlights:1.4"
+
+or if you want a snapshot with latest features:
+
+     compile "com.badlogicgames.box2dlights:box2dlights:1.5-SNAPSHOT"
 
 ## Maintenance Note
 Box2dlights was moved from Google Code to Github to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
