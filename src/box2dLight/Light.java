@@ -455,9 +455,9 @@ public abstract class Light implements Disposable {
 	}
 
 	/** Global lights filter **/
-	static private Filter globalFilterA = null;
+	static protected Filter globalFilterA = null;
 	/** This light specific filter **/
-	private Filter filterA = null;
+	protected Filter filterA = null;
 
 	final RayCastCallback ray = new RayCastCallback() {
 		@Override
