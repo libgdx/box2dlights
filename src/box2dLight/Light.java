@@ -230,8 +230,14 @@ public abstract class Light implements Disposable {
 	 * Disposes all light resources
 	 */
 	public void dispose() {
-		lightMesh.dispose();
-		softShadowMesh.dispose();
+		if (lightMesh != null) {
+			lightMesh.dispose();
+			lightMesh = null;
+		}
+		if (softShadowMesh != null) {
+			softShadowMesh.dispose();
+			softShadowMesh = null;
+		}
 	}
 
 	/**
