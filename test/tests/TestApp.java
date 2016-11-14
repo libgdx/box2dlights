@@ -97,12 +97,12 @@ public class TestApp extends ApplicationAdapter implements InputProcessor {
 					light = new DebugConeLight(rayHandler, rayCount, Color.RED, 6, 0, 0, 0, 45);
 					break;
 				case LINE:
-					// note: default ChainLight is fixed, doesnt more or rotate
+					// note: default ChainLight is fixed, doesnt move or rotate
 					light = new ChainLight(rayHandler, rayCount, Color.RED, 6, 1, new float[] {
 						-1.5f, 0, 1.5f, 0});
 					break;
 				case CHAIN:
-					// note: default ChainLight is fixed, doesnt more or rotate
+					// note: default ChainLight is fixed, doesnt move or rotate
 					light = new ChainLight(rayHandler, rayCount, Color.RED, 6, 1, new float[] {
 						0, 2.5f,
 						.5f, 2.5f/3,
