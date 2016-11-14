@@ -5,6 +5,8 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 /**
+ * A light designed to cover entire screen
+ *
  * Created by PiotrJ on 18/08/2016.
  */
 public class SmoothDirectionalLight extends SmoothLineLight implements DebugLight {
@@ -17,9 +19,13 @@ public class SmoothDirectionalLight extends SmoothLineLight implements DebugLigh
 		endColorScale = 0;
 	}
 
-	float lastSizeOfScreen;
-	float lastRayHandlerX;
-	float lastRayHandlerY;
+	protected float lastSizeOfScreen;
+	protected float lastRayHandlerX;
+	protected float lastRayHandlerY;
+	// large enough to never show edges of the light
+	protected float widthScale = (float)Math.sqrt(2);
+	// double the screen size seems enough to never allow the end of the light to be visible
+	protected float distanceScale = 2;
 	@Override void update () {
 		final float width = (rayHandler.x2 - rayHandler.x1);
 		final float height = (rayHandler.y2 - rayHandler.y1);
@@ -38,8 +44,8 @@ public class SmoothDirectionalLight extends SmoothLineLight implements DebugLigh
 			float y = (rayHandler.y1 + rayHandler.y2) * 0.5f - heightOffSet;
 
 			super.setPosition(x, y);
-			super.setWidth(sizeOfScreen * 1.42f);
-			super.setDistance(sizeOfScreen * 2f);
+			super.setWidth(sizeOfScreen * widthScale);
+			super.setDistance(sizeOfScreen * distanceScale);
 		}
 		super.update();
 	}
@@ -56,11 +62,19 @@ public class SmoothDirectionalLight extends SmoothLineLight implements DebugLigh
 	}
 
 	@Override public void setPosition (float x, float y) {
-
+		// this light type has no position
 	}
 
 	@Override public void setPosition (Vector2 position) {
+		// this light type has no position
+	}
 
+	@Override public void setWidth (float width) {
+		// this light doesnt not allow for manual width setting
+	}
+
+	@Override public void setDistance (float dist) {
+		// this light doesnt not allow for manual distance setting
 	}
 
 	@Override public float getX () {

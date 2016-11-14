@@ -36,7 +36,7 @@ public class SmoothPointLight extends SmoothPositionalLight {
 		}
 		// add missing last point to finish the loop
 		rays[currentRayNum++].set(rays[0]);
-		endRayId = currentRayNum;
+		onePastEndRayId = currentRayNum;
 	}
 
 	protected void setEndPoints() {

@@ -8,17 +8,80 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.Array;
 
 /**
- * This is a composite of multiple line and cone lights to
+ * Composite of multiple line lights forming a chain.
  * Created by PiotrJ on 16/11/2015.
  */
 public class SmoothChainLight extends Light implements DebugLight {
 	private int side = 1;
+	private int extraRayNum = MIN_RAYS;
 	private float endScale = 1;
 	private Array<Light> lights = new Array<Light>();
-	public SmoothChainLight (RayHandler rayHandler, int rays, Color color, float distance, float directionDegree, int side) {
-		super(rayHandler, rays, color, distance, directionDegree);
-		this.side = side;
-		position.set(-15, 0);
+
+	protected Body body;
+	protected float bodyOffsetX;
+	protected float bodyOffsetY;
+	protected float bodyAngleOffset;
+
+	/**
+	 * Creates chain light without vertices, they can be added any time later
+	 *
+	 * @param rayHandler
+	 *            not {@code null} instance of RayHandler
+	 * @param baseRays
+	 *            number of rays - more rays make light to look more realistic
+	 *            but will decrease performance, can't be less than MIN_RAYS
+	 * @param color
+	 *            color, set to {@code null} to use the default color
+	 * @param distance
+	 *            distance of light, soft shadow length is set to distance * 0.1f
+	 * @param rayDirection
+	 *            direction of rays
+	 *            <ul>
+	 *            <li>1 = left</li>
+	 *            <li>-1 = right</li>
+	 *            </ul>
+	 * @param chain
+	 *            float array of (x, y) vertices from which rays will be
+	 *            evenly distributed
+	 */
+	public SmoothChainLight (RayHandler rayHandler, int baseRays, Color color, float distance, float directionDegree, int rayDirection, float[] chain) {
+		this(rayHandler, baseRays, color, distance, directionDegree, rayDirection, chain, baseRays * 2);
+	}
+
+	/**
+	 * Creates chain light without vertices, they can be added any time later
+	 *
+	 * @param rayHandler
+	 *            not {@code null} instance of RayHandler
+	 * @param baseRays
+	 *            number of rays - more rays make light to look more realistic
+	 *            but will decrease performance, can't be less than MIN_RAYS
+	 * @param color
+	 *            color, set to {@code null} to use the default color
+	 * @param distance
+	 *            distance of light, soft shadow length is set to distance * 0.1f
+	 * @param rayDirection
+	 *            direction of rays
+	 *            <ul>
+	 *            <li>1 = left</li>
+	 *            <li>-1 = right</li>
+	 *            </ul>
+	 * @param chain
+	 *            float array of (x, y) vertices from which rays will be
+	 *            evenly distributed
+	 * @param extraRays
+	 *            number of rays - more rays make light to look more realistic
+	 *            but will decrease performance, can't be less than MIN_RAYS
+	 */
+	public SmoothChainLight (RayHandler rayHandler, int baseRays, Color color, float distance, float directionDegree, int rayDirection, float[] chain, int extraRays) {
+		super(rayHandler, baseRays, color, distance, directionDegree);
+		if (rayDirection == 1 || rayDirection == -1) {
+			this.side = rayDirection;
+		} else {
+			throw new AssertionError("Invalid rayDirection, 1 or -1 expected, got " + rayDirection);
+		}
+		if (extraRays >= MIN_RAYS) this.extraRayNum = extraRays;
+		createChain(chain);
 	}
 
 	private Vector2 position = new Vector2();
@@ -29,80 +92,41 @@ public class SmoothChainLight extends Light implements DebugLight {
 	private Vector2 segmentNormal = new Vector2();
 	private Vector2 segmentDir = new Vector2();
 
-//	private Vector2 p4 = new Vector2();
 	private float[] chain;
 
-	public void createChain (float[] chain) {
-		if (chain.length < 4 && chain.length % 4 != 0) throw new AssertionError("Invalid chain length");
+	/**
+	 * @param chain
+	 *            float array of (x, y) vertices from which rays will be
+	 *            evenly distributed
+	 */
+	private void createChain (float[] chain) {
+		if (chain.length < 4 && chain.length % 4 != 0) throw new AssertionError("Chain length has to be a multiple of 4, but is: " + chain.length);
 		this.chain = chain;
 
 		lightDir.set(1, 0f).rotate(direction).nor();
+		float totalDst = 0;
+		for (int i = 0; i < chain.length -3; i+=2) {
+			p1.set(chain[i], chain[i + 1]);
+			p2.set(chain[i + 2], chain[i + 3]);
+			totalDst += p1.dst(p2);
+		}
+
+		float raysPerUnit = Math.max(rayNum/totalDst, MIN_RAYS);
+		float extraRaysPerUnit = Math.max(extraRayNum/totalDst, MIN_RAYS);
 
 		for (int i = 0; i < chain.length -3; i+=2) {
 			p1.set(chain[i], chain[i + 1]);
 			p2.set(chain[i + 2], chain[i + 3]);
-			lights.add(new SmoothLineLight(rayHandler, rayNum, color, 1, 0, p1.dst(p2), rayNum * 2));
+			float dst = p1.dst(p2);
+			int rn = Math.round(raysPerUnit * dst);
+			int ern = Math.round(extraRaysPerUnit * dst);
+			lights.add(new SmoothLineLight(rayHandler, rn, color, 1, 0, p1.dst(p2), ern));
 		}
 	}
 
 	@Override public void debugDraw (ShapeRenderer renderer) {
 		drawRays(renderer);
 		drawEdge(renderer);
-
-		if (chain != null) {
-			// draw centre
-			renderer.setColor(Color.MAGENTA);
-			renderer.circle(position.x, position.y, 0.16f, 16);
-
-			for (int i = 0; i < chain.length -3; i+=2) {
-				p1.set(chain[i], chain[i + 1]);
-				p2.set(chain[i + 2], chain[i + 3]);
-
-				p1.rotate(direction);
-				p2.rotate(direction);
-
-				// center of segment
-				segmentCentre.set((p2.x + p1.x)/2, (p2.y + p1.y)/2);
-
-				// direction of segment
-				segmentDir.set(p2.x - p1.x, p2.y - p1.y).nor();
-
-				p1.add(position);
-				p2.add(position);
-				segmentCentre.add(position);
-
-				// draw segment
-				renderer.setColor(Color.CYAN);
-				renderer.line(p1, p2);
-
-				// segment normal, perpendicular to direction
-				segmentNormal.set(-segmentDir.y, segmentDir.x);
-
-				// draw normal
-				renderer.setColor(Color.RED);
-				renderer.line(segmentCentre.x, segmentCentre.y, segmentCentre.x + segmentNormal.x, segmentCentre.y + segmentNormal.y);
-
-				// draw light direction
-				renderer.setColor(Color.MAGENTA);
-				renderer.line(segmentCentre.x, segmentCentre.y, segmentCentre.x + lightDir.x, segmentCentre.y + lightDir.y);
-
-				float dot = lightDir.dot(segmentNormal);
-				float sign = Math.signum(dot);
-//				float sin = MathUtils.sinDeg(normal.angle(dir));
-				float sin = MathUtils.sinDeg(lightDir.angle(segmentNormal));
-				float offset = sin * sign;
-				// draw offset
-				renderer.setColor(Color.GREEN);
-				renderer.line(segmentCentre.x + lightDir.x, segmentCentre.y + lightDir.y, segmentCentre.x + lightDir.x + offset, segmentCentre.y + lightDir.y);
-
-				// new height
-				float height = lightDir.dot(segmentNormal);
-				// draw new height
-				renderer.setColor(Color.BLUE);
-				renderer.line(
-					segmentCentre.x + lightDir.x, segmentCentre.y + lightDir.y, segmentCentre.x + lightDir.x - segmentNormal.x * height, segmentCentre.y + lightDir.y - segmentNormal.y * height);
-			}
-		}
 	}
 
 	@Override public void drawRays (ShapeRenderer renderer) {
@@ -124,10 +148,17 @@ public class SmoothChainLight extends Light implements DebugLight {
 	}
 
 	@Override public void setDebugColors (Color ray, Color hardEdge, Color softEdge) {
-
+		for (Light light : lights) {
+			if (light instanceof DebugLight) {
+				DebugLight dl = (DebugLight)light;
+				dl.setDebugColors(ray, hardEdge, softEdge);
+			}
+		}
 	}
 
 	@Override void update () {
+		updateBody();
+
 		for (int i = 0; i < lights.size; i++) {
 			Light light = lights.get(i);
 			int ci = i * 2;
@@ -167,10 +198,7 @@ public class SmoothChainLight extends Light implements DebugLight {
 	}
 
 	@Override void render () {
-		// TODO current ray handler doesnt really allow easy for delegation
-//		for (Light light : lights) {
-//			light.render();
-//		}
+		// NOTE ray handler doesnt really allow for easy delegation, thus lights are rendered automatically by it
 	}
 
 	@Override public void setDistance (float dist) {
@@ -178,18 +206,45 @@ public class SmoothChainLight extends Light implements DebugLight {
 	}
 
 	@Override public void setDirection (float directionDegree) {
-		direction = directionDegree;
-		// craps called from constructor in super :/
-		if (lightDir != null)
+		direction = directionDegree * side;
+		// NOTE this will be null when super constructor calls setDirection and we are not fully initialized
+		if (lightDir != null) {
 			lightDir.set(1, 0f).rotate(direction).nor();
+		}
 	}
 
-	@Override public void attachToBody (Body body) {
+	@Override
+	public void attachToBody(Body body) {
+		attachToBody(body, 0f, 0f, 0f);
+	}
 
+	public void attachToBody(Body body, float offsetX, float offsetY) {
+		attachToBody(body, offsetX, offsetY, 0f);
+	}
+
+	public void attachToBody(Body body, float offsetX, float offsetY, float degrees) {
+		this.body = body;
+		bodyOffsetX = offsetX;
+		bodyOffsetY = offsetY;
+		bodyAngleOffset = degrees;
+		dirty = true;
 	}
 
 	@Override public Body getBody () {
-		return null;
+		return body;
+	}
+
+	protected void updateBody() {
+		if (body == null || staticLight) return;
+
+		final Vector2 vec = body.getPosition();
+		float angle = body.getAngle();
+		final float cos = MathUtils.cos(angle);
+		final float sin = MathUtils.sin(angle);
+		final float dX = bodyOffsetX * cos - bodyOffsetY * sin;
+		final float dY = bodyOffsetX * sin + bodyOffsetY * cos;
+		position.x = vec.x + dX;
+		position.y = vec.y + dY;
 	}
 
 	@Override public void setPosition (float x, float y) {
@@ -231,21 +286,23 @@ public class SmoothChainLight extends Light implements DebugLight {
 
 	@Override public void dispose () {
 		for (Light light : lights) {
-//			light.dispose();
+			light.dispose();
 		}
 		lights.clear();
 	}
 
 	@Override public boolean contains (float x, float y) {
-		// TODO line lights broken?
 		for (Light light : lights) {
 			if (light.contains(x, y)) return true;
 		}
 		return false;
 	}
 
+	/**
+	 * Sets end scale of first and last lights in the chain {@see SmoothLineLight#setEndScale}
+	 * @param endScale end scale to set, negative values may produce strange results
+	 */
 	public void setEndScale(float endScale) {
-		endScale = MathUtils.clamp(endScale, 0, 10);
 		if (MathUtils.isEqual(this.endScale, endScale)) return;
 		this.endScale = endScale;
 
