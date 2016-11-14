@@ -1,5 +1,6 @@
 package box2dLight;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
@@ -25,7 +26,6 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 	protected float bodyOffsetY;
 	protected float bodyAngleOffset;
 
-	// TODO do we need these for anything?
 	protected float sin[];
 	protected float cos[];
 
@@ -118,7 +118,6 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 		}
 	};
 
-	protected float cornerOffset = 0.025f;
 
 	private static Vector2 vert1 = new Vector2();
 	private static Vector2 vert2 = new Vector2();
@@ -149,6 +148,9 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 		}
 	};
 
+	// small enough value used to translate ends of the rays to the side when targeting shape points.
+	// smaller values may produce precision errors
+	protected float offsetSize = 0.02f;
 	protected void updateRays () {
 		for (Fixture fixture : foundFixtures) {
 			Shape shape = fixture.getShape();
@@ -167,26 +169,26 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 						// TODO do we want more points between center and tangents?
 						// can look bad when light has few base points and circle is big
 						// could calculate angle between tangent and center ray and use that to add some extras
-						addRay(tmp3, dst2, cornerOffset);
-						addRay(tmp4, dst2, cornerOffset);
+						addRay(tmp3, dst2, offsetSize);
+						addRay(tmp4, dst2, offsetSize);
 					}
 				}
 				break;
-			case Polygon:
+			case Polygon: // fallthrough to Chain
 			case Chain:
 				int vc = getVertexCount(shape);
 				getVertex(fixture, vc - 1, vert1);
 				// add first corner if needed
 				if (vert1.dst2(start) <= dst2) {
 					if (currentRayNum + 2 >= rayNum) break;
-					// we dont shoot directly at the cornet, as sometimes the ray goes straight through it
-					addRay(vert1, dst2, cornerOffset);
+					// we dont shoot directly at the corner, as sometimes the ray goes straight through it
+					addRay(vert1, dst2, offsetSize);
 				}
 				for (int i = 0; i < vc; i++) {
 					getVertex(fixture, i, vert2);
 					int found = CircleUtils.findIntersections(start, distance, vert1, vert2, tmp3, tmp4);
 					// NOTE a bit of margin, cus floats
-					// NOTE checking for dest saves as a bunch of rays for points that are not on the line
+					// NOTE checking for dest saves us a bunch of rays for points that are not on the line
 					if (found == 1) {
 						if (currentRayNum + 1 >= rayNum) break;
 						if (tmp3.dst2(start) <= dst2 + 0.001f
@@ -207,15 +209,16 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 					// also add corner
 					if (vert2.dst2(start) <= dst2) {
 						if (currentRayNum + 2 >= rayNum) break;
-						// we dont shoot directly at the cornet, as sometimes the ray goes straight through it
-						addRay(vert2, dst2, cornerOffset);
+						// we dont shoot directly at the corner, as sometimes the ray goes straight through it
+						addRay(vert2, dst2, offsetSize);
 					}
 					vert1.set(vert2);
 				}
 				break;
-			// edge is used for ghost vertices we don't care about ir
-			case Edge:
+			// edge is used for ghost vertices we don't care about it
+			case Edge: break;
 			default:
+				Gdx.app.log("SmoothPositionalLight", "Not handled shape type: " + shape.getType().name());
 				break;
 			}
 		}
@@ -240,7 +243,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 	}
 
 	protected int startRayId;
-	protected int endRayId;
+	protected int onePastEndRayId;
 	protected abstract void updateMesh();
 
 	// lets hope this gets inlined
@@ -324,7 +327,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 		}
 		currentRayNum = baseRayNum;
 		startRayId = 0;
-		endRayId = baseRayNum;
+		onePastEndRayId = baseRayNum;
 	}
 
 	protected void queryWorld () {
@@ -355,7 +358,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 			my[i] = tmpEnd.y;
 			extendBounds(aabb, tmpEnd.x, tmpEnd.y);
 		}
-		// TODO do we need this? might be useful cus floats
+		// extend slightly cus floats
 		addBounds(aabb, distance * 0.01f);
 	}
 
@@ -380,7 +383,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 		segments[size++] = colorF;
 		segments[size++] = 1;
 		// rays ending points.
-		for (int i = startRayId; i < endRayId; i++) {
+		for (int i = startRayId; i < onePastEndRayId; i++) {
 			Ray ray = rays[i];
 			segments[size++] = ray.x;
 			segments[size++] = ray.y;
@@ -393,7 +396,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 
 		size = 0;
 		// rays ending points.
-		for (int i = startRayId; i < endRayId; i++) {
+		for (int i = startRayId; i < onePastEndRayId; i++) {
 			Ray ray = rays[i];
 			segments[size++] = ray.x;
 			segments[size++] = ray.y;
@@ -472,6 +475,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 		if (rayColor != null) {
 			renderer.setColor(rayColor);
 		} else {
+			// semi-transparent Cyan
 			renderer.setColor(0, 1, 1, .1f);
 		}
 		if (isSoft()) {
@@ -494,6 +498,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 			if (softEdgeColor != null) {
 				renderer.setColor(softEdgeColor);
 			} else {
+				// semi-transparent Yellow
 				renderer.setColor(1, 1, 0, .25f);
 			}
 			int numVertices = softShadowMesh.getNumVertices();
@@ -517,6 +522,7 @@ public abstract class SmoothPositionalLight extends Light implements DebugLight 
 		if (hardEdgeColor != null)
 			renderer.setColor(hardEdgeColor);
 		else {
+			// semi-transparent Red
 			renderer.setColor(1, 0, 0, .25f);
 		}
 		int numVertices = lightMesh.getNumVertices();

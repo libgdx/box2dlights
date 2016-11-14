@@ -68,12 +68,12 @@ public class TestApp extends ApplicationAdapter implements InputProcessor {
 					light = new SmoothLineLight(rayHandler, rayCount/4, Color.GREEN, 6, 1, 3, rayCount/4 * 3);
 					break;
 				case CHAIN:
-					light = new SmoothChainLight(rayHandler, rayCount, Color.GREEN, 6, 1, 1);
-					((SmoothChainLight)light).createChain(new float[] {
-					0, 2.5f,
-					.5f, 2.5f/3,
-					-.5f, -2.5f/3,
-					0, -2.5f});
+					float[] chain = new float[] {
+						0, 2.5f,
+						.5f, 2.5f/3,
+						-.5f, -2.5f/3,
+						0, -2.5f};
+					light = new SmoothChainLight(rayHandler, rayCount/4, Color.GREEN, 6, 1, 1, chain, rayCount/4 * 3);
 					break;
 				case DIRECTIONAL:
 					light = new SmoothDirectionalLight(rayHandler, rayCount/4 * 2, Color.GREEN, 41, rayCount/4 * 3 * 2);

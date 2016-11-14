@@ -24,7 +24,7 @@ public class SmoothConeLight extends SmoothPositionalLight {
 
 	protected void updateMesh() {
 		startRayId = 0;
-		endRayId = currentRayNum;
+		onePastEndRayId = currentRayNum;
 		if (rayHandler.world != null && !xray) {
 			// get first and last valid rays
 			final Ray first = rays[0];
@@ -53,26 +53,25 @@ public class SmoothConeLight extends SmoothPositionalLight {
 						startRayId = i;
 					}
 					if (ray == last) {
-						endRayId = i + 1;
+						onePastEndRayId = i + 1;
 						break;
 					}
 				}
-				currentRayNum = endRayId - startRayId;
+				currentRayNum = onePastEndRayId - startRayId;
 			}
 		}
 		if (coneDegree > 179.5f) {
 			currentRayNum++;
 			// copy first one to last, so we finish the circle
-			rays[endRayId++].set(rays[startRayId]);
+			rays[onePastEndRayId++].set(rays[startRayId]);
 		}
 	}
 
 	protected float rayAngleStep;
 	protected void setEndPoints() {
-		rayAngleStep = actualConeDeg / (baseRayNum - 1.0f);
+		rayAngleStep = actualConeDeg / (baseRayNum - 1);
 		for (int i = 0; i < baseRayNum; i++) {
-			float angle = direction + actualConeDeg - 2f * actualConeDeg * i
-					/ (baseRayNum - 1f);
+			float angle = direction + actualConeDeg - 2 * actualConeDeg * i / (baseRayNum - 1);
 			final float s = sin[i] = MathUtils.sinDeg(angle);
 			final float c = cos[i] = MathUtils.cosDeg(angle);
 			endX[i] = distance * c;

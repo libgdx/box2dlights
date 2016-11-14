@@ -11,9 +11,10 @@ import com.badlogic.gdx.utils.Sort;
 import java.util.Comparator;
 
 /**
+ * A light with evenly spread rays along a line.
+ * Shape can be altered with endScale and center offset
+ *
  * Created by PiotrJ on 14/11/2015.
- * TODO scale for top width, 0 for point, 1 for same as bot
- * TODO offset for top middle
  */
 @SuppressWarnings("Duplicates")
 public class SmoothLineLight extends Light implements DebugLight {
@@ -223,11 +224,12 @@ public class SmoothLineLight extends Light implements DebugLight {
 		}
 	};
 
+	// small enough value used to translate ends of the rays to the side when targeting shape points.
+	// smaller values may produce precision errors
 	protected float offsetSize = 0.02f;
 	protected float offsetX;
 	protected float offsetY;
 
-	// TODO haha, clean this up maybe?
 	protected static Vector2 polyV1 = new Vector2();
 	protected static Vector2 polyV2 = new Vector2();
 	protected static Vector2 vert1 = new Vector2();
@@ -266,7 +268,6 @@ public class SmoothLineLight extends Light implements DebugLight {
 			float offX;
 			float offY;
 			Body body = fixture.getBody();
-			float dst2 = distance * distance;
 			switch (shape.getType()) {
 			case Circle:
 				CircleShape circle = (CircleShape)shape;
@@ -278,7 +279,6 @@ public class SmoothLineLight extends Light implements DebugLight {
 				addRay(tmp4, tmp5);
 
 				// we need to find out angle to offset the ray targets so they end up in correct places around the circle
-				// TODO this angle stuff can be done once per frame
 				float angle = vert1.set(tmp5).sub(tmp4).angle();
 				float deg = angle + 90;
 				if ( deg >= 360) deg -= 360;
@@ -324,7 +324,7 @@ public class SmoothLineLight extends Light implements DebugLight {
 					fastAddRay(tmp4, tmp5);
 				}
 				break;
-			case Polygon:
+			case Polygon: // fallthrough to Chain
 			case Chain:
 				int vc = getVertexCount(shape);
 				getVertex(fixture, vc - 1, vert1);
@@ -350,7 +350,6 @@ public class SmoothLineLight extends Light implements DebugLight {
 					if (inBounds(vert2.x, vert2.y)) {
 						// clip our line with top and bottom edges of the light
 						Intersector.intersectLines(vert2, virtualStart, pos, firstRay.start, tmp4);
-						// TODO does this work as expected? looks ok...if (endScale != 0) {
 						if (endScale == 0) {
 							addRay(tmp4.add(-offX, -offY), firstRay.end);
 							addRay(tmp4.add(offX * 2, offY * 2), firstRay.end);
@@ -369,8 +368,10 @@ public class SmoothLineLight extends Light implements DebugLight {
 					vert1.set(vert2);
 				}
 				break;
+			// edge is used for ghost vertices we don't care about it
+			case Edge: break;
 			default:
-				Gdx.app.log("Fixture", shape.getType().name());
+				Gdx.app.log("SmoothLineLight", "Not handled shape type: " + shape.getType().name());
 			}
 
 		}
@@ -734,18 +735,13 @@ public class SmoothLineLight extends Light implements DebugLight {
 	@Override public void debugDraw (ShapeRenderer renderer) {
 		drawRays(renderer);
 		drawEdge(renderer);
-//		renderer.setColor(Color.RED);
-//		renderer.line(pos, posEnd);
-//		renderer.line(posEnd, posEndSide);
-//		renderer.setColor(Color.GOLD);
-//		renderer.rect(aabb.x, aabb.y, aabb.width, aabb.height);
-//		renderer.polygon(bounds.getTransformedVertices());
 	}
 
 	public void drawRays(ShapeRenderer renderer) {
 		if (rayColor != null) {
 			renderer.setColor(rayColor);
 		} else {
+			// semi-transparent Cyan
 			renderer.setColor(0, 1, 1, .1f);
 		}
 		if (isSoft()) {
@@ -775,6 +771,7 @@ public class SmoothLineLight extends Light implements DebugLight {
 			if (softEdgeColor != null) {
 				renderer.setColor(softEdgeColor);
 			} else {
+				// semi-transparent Yellow
 				renderer.setColor(1, 1, 0, .25f);
 			}
 			// soft mesh edge
@@ -812,6 +809,7 @@ public class SmoothLineLight extends Light implements DebugLight {
 		if (hardEdgeColor != null) {
 			renderer.setColor(hardEdgeColor);
 		} else {
+			// semi-transparent Red
 			renderer.setColor(1, 0, 0, .25f);
 		}
 		int numVertices = lightMesh.getNumVertices();
@@ -923,14 +921,26 @@ public class SmoothLineLight extends Light implements DebugLight {
 		return centerOffset;
 	}
 
+	/**
+	 * Move the point considered the centre of the top line of the light, changing the angle of rays
+	 *
+	 * @param centerOffset to set
+	 */
 	public void setCenterOffset (float centerOffset) {
 		if (MathUtils.isEqual(this.centerOffset, centerOffset)) return;
 		this.centerOffset = centerOffset;
 		dirty = true;
 	}
 
+	/**
+	 * Changes the scale of the end line of the light
+	 * default is 1
+	 * lower value will result in a "pointy" light
+	 * larger valye will result in a "cone" light
+	 *
+	 * @param endScale to set
+	 */
 	public void setEndScale(float endScale) {
-		endScale = MathUtils.clamp(endScale, 0, 10);
 		if (MathUtils.isEqual(this.endScale, endScale)) return;
 		this.endScale = endScale;
 		dirty = true;
