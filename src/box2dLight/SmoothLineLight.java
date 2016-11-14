@@ -373,13 +373,11 @@ public class SmoothLineLight extends Light implements DebugLight {
 			default:
 				Gdx.app.log("SmoothLineLight", "Not handled shape type: " + shape.getType().name());
 			}
-
 		}
 	}
 
 	protected void updateStraightRays () {
 		for (Fixture fixture : foundFixtures) {
-
 			Shape shape = fixture.getShape();
 			Body body = fixture.getBody();
 			switch (shape.getType()) {
@@ -431,7 +429,7 @@ public class SmoothLineLight extends Light implements DebugLight {
 					addRay(tmp5, tmp6);
 				}
 				break;
-			case Polygon:
+			case Polygon: // fallthrough to Chain
 			case Chain:
 				int vc = getVertexCount(shape);
 				getVertex(fixture, vc - 1, polyV1);
@@ -468,8 +466,11 @@ public class SmoothLineLight extends Light implements DebugLight {
 					polyV1.set(polyV2);
 				}
 				break;
+			// edge is used for ghost vertices we don't care about it
+			case Edge: break;
 			default:
-				Gdx.app.log("Fixture", shape.getType().name());
+				Gdx.app.log("SmoothPositionalLight", "Not handled shape type: " + shape.getType().name());
+				break;
 			}
 		}
 	}
