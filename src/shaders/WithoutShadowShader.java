@@ -32,9 +32,12 @@ public final class WithoutShadowShader {
 		ShaderProgram.pedantic = false;
 		ShaderProgram woShadowShader = new ShaderProgram(vertexShader,
 				fragmentShader);
-		if (woShadowShader.isCompiled() == false) {
-			Gdx.app.log("ERROR", woShadowShader.getLog());
-
+		if (!woShadowShader.isCompiled()) {
+			woShadowShader = new ShaderProgram("#version 330 core\n" +vertexShader,
+					"#version 330 core\n" +fragmentShader);
+			if(!woShadowShader.isCompiled()){
+				Gdx.app.log("ERROR", woShadowShader.getLog());
+			}
 		}
 
 		return woShadowShader;

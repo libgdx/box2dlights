@@ -64,8 +64,12 @@ public class Gaussian {
 		ShaderProgram.pedantic = false;
 		ShaderProgram blurShader = new ShaderProgram(vertexShader,
 				fragmentShader);
-		if (blurShader.isCompiled() == false) {
-			Gdx.app.log("ERROR", blurShader.getLog());
+		if (!blurShader.isCompiled()) {
+			blurShader = new ShaderProgram("#version 330 core\n" +vertexShader,
+					"#version 330 core\n" +fragmentShader);
+			if(!blurShader.isCompiled()){
+				Gdx.app.log("ERROR", blurShader.getLog());
+			}
 		}
 
 		return blurShader;
