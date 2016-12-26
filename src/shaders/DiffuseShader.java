@@ -33,9 +33,12 @@ public class DiffuseShader {
 		ShaderProgram.pedantic = false;
 		ShaderProgram shadowShader = new ShaderProgram(vertexShader,
 					fragmentShader);
-		if (shadowShader.isCompiled() == false) {
-			Gdx.app.log("ERROR", shadowShader.getLog());
-
+		if (!shadowShader.isCompiled()) {
+			shadowShader = new ShaderProgram("#version 330 core\n" +vertexShader,
+					"#version 330 core\n" +fragmentShader);
+			if(!shadowShader.isCompiled()){
+				Gdx.app.log("ERROR", shadowShader.getLog());
+			}
 		}
 
 		return shadowShader;

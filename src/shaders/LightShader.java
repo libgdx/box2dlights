@@ -37,8 +37,12 @@ public final class LightShader {
 		ShaderProgram.pedantic = false;
 		ShaderProgram lightShader = new ShaderProgram(vertexShader,
 				fragmentShader);
-		if (lightShader.isCompiled() == false) {
-			Gdx.app.log("ERROR", lightShader.getLog());
+		if (!lightShader.isCompiled()) {
+			lightShader = new ShaderProgram("#version 330 core\n" +vertexShader,
+					"#version 330 core\n" +fragmentShader);
+			if(!lightShader.isCompiled()){
+				Gdx.app.log("ERROR", lightShader.getLog());
+			}
 		}
 
 		return lightShader;
