@@ -26,6 +26,11 @@ public class RayHandler implements Disposable {
 	 * TODO: remove final modifier and provide method to change
 	 * this default value if needed to anyone? */
 	static final float GAMMA_COR = 0.625f;
+	
+	
+	/** Set the Box2D world's pixel to meters scale. Useful for correct positing in {@link Light#attachToBody}.
+	 * Default value is 1. */
+	static public float BOX2D_WORLD_SCALE = 1; 
 
 	static boolean gammaCorrection = false;
 	static float gammaCorrectionParameter = 1f;
