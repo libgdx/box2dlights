@@ -130,7 +130,7 @@ public class ChainLight extends Light {
 	}
 	
 	@Override
-	void update() {
+	public void update() {
 		if (dirty) {
 			updateChain();
 			applyAttachment();
@@ -146,7 +146,7 @@ public class ChainLight extends Light {
 	}
 	
 	@Override
-	void render() {
+	public void render() {
 		if (rayHandler.culling && culled) return;
 		
 		rayHandler.lightRenderedLastFrame++;
