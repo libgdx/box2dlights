@@ -151,7 +151,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 			}
 		}
 		once = false;
-		normalFbo = new FrameBuffer(Pixmap.Format.RGB565, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+		normalFbo = FrameBuffer.createFrameBuffer(Pixmap.Format.RGB565, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
 	}
 
 	private ShaderProgram createLightShader () {
