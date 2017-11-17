@@ -10,7 +10,7 @@
 	<groupId>com.badlogicgames.box2dlights</groupId>
 	<artifactId>box2dlights</artifactId>
 	<packaging>jar</packaging>
-	<version>1.5-SNAPSHOT</version>
+	<version>1.5-LOCAL</version>
 
 	<name>Box2dlights</name>
 	<description>2D real-time lighting using box2d</description>
