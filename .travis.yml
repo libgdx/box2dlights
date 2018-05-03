@@ -7,4 +7,4 @@ addons:
       - lftp
 script:
   - mvn clean deploy --settings .maven.settings
-  - lftp sftp://$UPLOADER_USER:$UPLOADER_PASSWORD@$UPLOADER_HOST" -e "mkdir -f uploads/box2dlights; mput target/*.jar -O uploads/box2dlights; bye"
+  - lftp sftp://$UPLOADER_USER:$UPLOADER_PASSWORD@$UPLOADER_HOST -e "mkdir -f uploads/box2dlights; mput target/*.jar -O uploads/box2dlights; bye"
