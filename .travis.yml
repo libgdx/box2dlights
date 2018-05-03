@@ -1,3 +1,9 @@
 language: java
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - lftp
 script:
   - mvn clean deploy --settings .maven.settings
