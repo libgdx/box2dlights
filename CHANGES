@@ -1,5 +1,8 @@
 [1.5]
-- Lights soft shadow length is set to distance * 0.1 on creation.
+- Added abitility render lights in frame buffer objects
+- Fixed Shader compilation problems on ATI graphic cards
+- Fixed ChainLight.update and .render access (now public as should)
+- Changed Lights soft shadow length to distance * 0.1 on creation
 
 [1.4]
 - Build against LibGDX 1.6.2
