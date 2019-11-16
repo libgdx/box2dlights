@@ -132,10 +132,10 @@ public abstract class PositionalLight extends Light {
 	 * @param degrees
 	 *            directional relative offset in degrees 
 	 */
-	public void attachToBody(Body body, float offsetX, float offSetY, float degrees) {
+	public void attachToBody(Body body, float offsetX, float offsetY, float degrees) {
 		this.body = body;
 		bodyOffsetX = offsetX;
-		bodyOffsetY = offSetY;
+		bodyOffsetY = offsetY;
 		bodyAngleOffset = degrees;
 		if (staticLight) dirty = true;
 	}
