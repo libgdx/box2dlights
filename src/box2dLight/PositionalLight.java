@@ -279,5 +279,28 @@ public abstract class PositionalLight extends Light {
 		}
 		softShadowMesh.setVertices(segments, 0, size);
 	}
-	
+
+	public float getBodyOffsetX() {
+		return bodyOffsetX;
+	}
+
+	public float getBodyOffsetY() {
+		return bodyOffsetY;
+	}
+
+	public float getBodyAngleOffset() {
+		return bodyAngleOffset;
+	}
+
+	public void setBodyOffsetX(float bodyOffsetX) {
+		this.bodyOffsetX = bodyOffsetX;
+	}
+
+	public void setBodyOffsetY(float bodyOffsetY) {
+		this.bodyOffsetY = bodyOffsetY;
+	}
+
+	public void setBodyAngleOffset(float bodyAngleOffset) {
+		this.bodyAngleOffset = bodyAngleOffset;
+	}
 }
