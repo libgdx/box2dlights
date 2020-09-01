@@ -2,3 +2,26 @@ plugins {
 	id 'java-library'
 }
 
+sourceSets {
+	main {
+		java {
+			srcDirs = ["src"]
+		}
+	}
+	test {
+		java {
+			srcDirs = ["test"]
+		}
+	}
+}
+
+ext.gdxVersion = "1.9.10"
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+	implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+}
