@@ -353,7 +353,7 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
             boxBodyDef.position.x = -20 + (float) (Math.random() * 40);
             boxBodyDef.position.y = 10 + (float) (Math.random() * 15);
             Body boxBody = world.createBody(boxBodyDef);
-            boxBody.createFixture(def).setUserData(new LightData(RADIUS));
+            boxBody.createFixture(def).setUserData(new LightData(RADIUS,true));
             balls.add(boxBody);
         }
         polygonShape.dispose();

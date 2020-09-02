@@ -52,14 +52,14 @@ public class DirectionalLight extends Light {
      * <p>
      * -90 direction is straight from up
      *
-     * @param rayHandler not {@code null} instance of RayHandler
-     * @param rays number of rays - more rays make light to look more realistic
-     * but will decrease performance, can't be less than MIN_RAYS
-     * @param color color, set to {@code null} to use the default color
+     * @param rayHandler      not {@code null} instance of RayHandler
+     * @param rays            number of rays - more rays make light to look more realistic
+     *                        but will decrease performance, can't be less than MIN_RAYS
+     * @param color           color, set to {@code null} to use the default color
      * @param directionDegree direction in degrees
      */
     public DirectionalLight(RayHandler rayHandler, int rays, Color color,
-            float directionDegree) {
+                            float directionDegree) {
 
         super(rayHandler, rays, color, Float.POSITIVE_INFINITY, directionDegree);
 
@@ -229,7 +229,8 @@ public class DirectionalLight extends Light {
             center.set(body.getWorldCenter());
             lstart.set(center).add(xDisp, yDisp);
 
-            int size = 0;
+            int shadowSize = 0;
+            int bodySize = 0;
             float l = data.height / (float) Math.tan(heightInDegrees * MathUtils.degRad);
             float f = 1f / data.shadowsDropped;
 
@@ -311,15 +312,31 @@ public class DirectionalLight extends Light {
                     tmpVec.set(tmpVerts.get(n));
                     tmpEnd.set(tmpVec).sub(lstart).setLength(l).add(tmpVec);
 
-                    segments[size++] = tmpVec.x;
-                    segments[size++] = tmpVec.y;
-                    segments[size++] = startColBits;
-                    segments[size++] = f;
+                    segments[shadowSize++] = tmpVec.x;
+                    segments[shadowSize++] = tmpVec.y;
+                    segments[shadowSize++] = startColBits;
+                    segments[shadowSize++] = f;
 
-                    segments[size++] = tmpEnd.x;
-                    segments[size++] = tmpEnd.y;
-                    segments[size++] = endColBits;
-                    segments[size++] = f;
+                    segments[shadowSize++] = tmpEnd.x;
+                    segments[shadowSize++] = tmpEnd.y;
+                    segments[shadowSize++] = endColBits;
+                    segments[shadowSize++] = f;
+                }
+                if (data.shadow) {
+                    for (int n = 0; n < vertexCount; n++) {
+                        tmpVec.set(tmpVerts.get(n));
+                        segments[shadowSize + bodySize++] = tmpVec.x;
+                        segments[shadowSize + bodySize++] = tmpVec.y;
+                        segments[shadowSize + bodySize++] = startColBits;
+                        segments[shadowSize + bodySize++] = f;
+                        if (n == vertexCount - 1) {
+                            tmpVec.set(tmpVerts.get(0));
+                            segments[shadowSize + bodySize++] = tmpVec.x;
+                            segments[shadowSize + bodySize++] = tmpVec.y;
+                            segments[shadowSize + bodySize++] = startColBits;
+                            segments[shadowSize + bodySize++] = f;
+                        }
+                    }
                 }
             } else if (type == Type.Circle) {
                 CircleShape shape = (CircleShape) fixtureShape;
@@ -335,16 +352,16 @@ public class DirectionalLight extends Light {
                         / RayHandler.CIRCLE_APPROX_POINTS;
                 for (int k = 0; k < RayHandler.CIRCLE_APPROX_POINTS; k++) {
                     tmpStart.set(center).add(tmpVec);
-                    segments[size++] = tmpStart.x;
-                    segments[size++] = tmpStart.y;
-                    segments[size++] = startColBits;
-                    segments[size++] = f;
+                    segments[shadowSize++] = tmpStart.x;
+                    segments[shadowSize++] = tmpStart.y;
+                    segments[shadowSize++] = startColBits;
+                    segments[shadowSize++] = f;
 
                     tmpEnd.set(tmpStart).sub(lstart).setLength(l).add(tmpStart);
-                    segments[size++] = tmpEnd.x;
-                    segments[size++] = tmpEnd.y;
-                    segments[size++] = endColBits;
-                    segments[size++] = f;
+                    segments[shadowSize++] = tmpEnd.x;
+                    segments[shadowSize++] = tmpEnd.y;
+                    segments[shadowSize++] = endColBits;
+                    segments[shadowSize++] = f;
 
                     tmpVec.rotateRad(angle);
                 }
@@ -354,44 +371,63 @@ public class DirectionalLight extends Light {
                 shape.getVertex1(tmpVec);
                 tmpVec.set(body.getWorldPoint(tmpVec));
 
-                segments[size++] = tmpVec.x;
-                segments[size++] = tmpVec.y;
-                segments[size++] = startColBits;
-                segments[size++] = f;
+                segments[shadowSize++] = tmpVec.x;
+                segments[shadowSize++] = tmpVec.y;
+                segments[shadowSize++] = startColBits;
+                segments[shadowSize++] = f;
 
                 tmpEnd.set(tmpVec).sub(lstart).setLength(l).add(tmpVec);
-                segments[size++] = tmpEnd.x;
-                segments[size++] = tmpEnd.y;
-                segments[size++] = endColBits;
-                segments[size++] = f;
+                segments[shadowSize++] = tmpEnd.x;
+                segments[shadowSize++] = tmpEnd.y;
+                segments[shadowSize++] = endColBits;
+                segments[shadowSize++] = f;
 
                 shape.getVertex2(tmpVec);
                 tmpVec.set(body.getWorldPoint(tmpVec));
-                segments[size++] = tmpVec.x;
-                segments[size++] = tmpVec.y;
-                segments[size++] = startColBits;
-                segments[size++] = f;
+                segments[shadowSize++] = tmpVec.x;
+                segments[shadowSize++] = tmpVec.y;
+                segments[shadowSize++] = startColBits;
+                segments[shadowSize++] = f;
 
                 tmpEnd.set(tmpVec).sub(lstart).setLength(l).add(tmpVec);
-                segments[size++] = tmpEnd.x;
-                segments[size++] = tmpEnd.y;
-                segments[size++] = endColBits;
-                segments[size++] = f;
+                segments[shadowSize++] = tmpEnd.x;
+                segments[shadowSize++] = tmpEnd.y;
+                segments[shadowSize++] = endColBits;
+                segments[shadowSize++] = f;
             }
 
-            Mesh mesh = null;
+            Mesh shadowMesh = null;
+            Mesh bodyMesh = null;
             if (meshInd >= dynamicShadowMeshes.size) {
-                mesh = new Mesh(
+                shadowMesh = new Mesh(
                         VertexDataType.VertexArray, false, 64, 0,
                         new VertexAttribute(Usage.Position, 2, "vertex_positions"),
                         new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
                         new VertexAttribute(Usage.Generic, 1, "s"));
-                dynamicShadowMeshes.add(mesh);
+                dynamicShadowMeshes.add(shadowMesh);
+                if (bodySize > 0) {
+                    bodyMesh = new Mesh(
+                            VertexDataType.VertexArray, false, 64, 0,
+                            new VertexAttribute(Usage.Position, 2, "vertex_positions"),
+                            new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
+                            new VertexAttribute(Usage.Generic, 1, "s"));
+                    dynamicShadowMeshes.add(bodyMesh);
+                }
             } else {
-                mesh = dynamicShadowMeshes.get(meshInd);
+                shadowMesh = dynamicShadowMeshes.get(meshInd);
+                if (bodySize > 0) {
+                    bodyMesh = dynamicShadowMeshes.get(meshInd + 1);
+                }
             }
-            mesh.setVertices(segments, 0, size);
-            meshInd++;
+            shadowMesh.setVertices(segments, 0, shadowSize);
+
+            if (bodySize > 0) {
+                bodyMesh.setVertices(segments, shadowSize, bodySize);
+                meshInd += 2;
+            } else {
+                meshInd++;
+            }
+
         }
         dynamicShadowMeshes.truncate(meshInd);
     }
@@ -474,7 +510,6 @@ public class DirectionalLight extends Light {
      * Not applicable for this light type
      * <p>
      * Always return {@code 0}
-     *
      */
     @Deprecated
     @Override
@@ -486,7 +521,6 @@ public class DirectionalLight extends Light {
      * Not applicable for this light type
      * <p>
      * Always return {@code 0}
-     *
      */
     @Deprecated
     @Override
@@ -522,7 +556,6 @@ public class DirectionalLight extends Light {
      * Not applicable for this light type
      * <p>
      * Always return {@code false}
-     *
      */
     @Deprecated
     @Override
@@ -533,7 +566,6 @@ public class DirectionalLight extends Light {
     /**
      * Sets the body to be ignored by this light, pass {@code null} to disable
      * it
-     *
      */
     public void setIgnoreBody(Body body) {
         this.body = body;
