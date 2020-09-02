@@ -230,7 +230,7 @@ public class DirectionalLight extends Light {
             lstart.set(center).add(xDisp, yDisp);
 
             int size = 0;
-            float l = data.height / (float) Math.sin(heightInDegrees * MathUtils.degRad);
+            float l = data.height / (float) Math.tan(heightInDegrees * MathUtils.degRad);
             float f = 1f / data.shadowsDropped;
 
             float startColBits = rayHandler.shadowColorInterpolation
