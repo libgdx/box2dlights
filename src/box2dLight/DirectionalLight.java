@@ -230,7 +230,6 @@ public class DirectionalLight extends Light {
             lstart.set(center).add(xDisp, yDisp);
 
             int shadowSize = 0;
-            int bodySize = 0;
             float l = data.height / (float) Math.tan(heightInDegrees * MathUtils.degRad);
             float f = 1f / data.shadowsDropped;
 
@@ -325,16 +324,16 @@ public class DirectionalLight extends Light {
                 if (data.shadow) {
                     for (int n = 0; n < vertexCount; n++) {
                         tmpVec.set(tmpVerts.get(n));
-                        segments[shadowSize + bodySize++] = tmpVec.x;
-                        segments[shadowSize + bodySize++] = tmpVec.y;
-                        segments[shadowSize + bodySize++] = startColBits;
-                        segments[shadowSize + bodySize++] = f;
+                        segments[shadowSize++] = tmpVec.x;
+                        segments[shadowSize++] = tmpVec.y;
+                        segments[shadowSize++] = startColBits;
+                        segments[shadowSize++] = f;
                         if (n == vertexCount - 1) {
                             tmpVec.set(tmpVerts.get(0));
-                            segments[shadowSize + bodySize++] = tmpVec.x;
-                            segments[shadowSize + bodySize++] = tmpVec.y;
-                            segments[shadowSize + bodySize++] = startColBits;
-                            segments[shadowSize + bodySize++] = f;
+                            segments[shadowSize++] = tmpVec.x;
+                            segments[shadowSize++] = tmpVec.y;
+                            segments[shadowSize++] = startColBits;
+                            segments[shadowSize++] = f;
                         }
                     }
                 }
@@ -397,36 +396,18 @@ public class DirectionalLight extends Light {
             }
 
             Mesh shadowMesh = null;
-            Mesh bodyMesh = null;
             if (meshInd >= dynamicShadowMeshes.size) {
                 shadowMesh = new Mesh(
-                        VertexDataType.VertexArray, false, 64, 0,
+                        VertexDataType.VertexArray, false, 128, 0,
                         new VertexAttribute(Usage.Position, 2, "vertex_positions"),
                         new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
                         new VertexAttribute(Usage.Generic, 1, "s"));
                 dynamicShadowMeshes.add(shadowMesh);
-                if (bodySize > 0) {
-                    bodyMesh = new Mesh(
-                            VertexDataType.VertexArray, false, 64, 0,
-                            new VertexAttribute(Usage.Position, 2, "vertex_positions"),
-                            new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
-                            new VertexAttribute(Usage.Generic, 1, "s"));
-                    dynamicShadowMeshes.add(bodyMesh);
-                }
             } else {
                 shadowMesh = dynamicShadowMeshes.get(meshInd);
-                if (bodySize > 0) {
-                    bodyMesh = dynamicShadowMeshes.get(meshInd + 1);
-                }
             }
             shadowMesh.setVertices(segments, 0, shadowSize);
-
-            if (bodySize > 0) {
-                bodyMesh.setVertices(segments, shadowSize, bodySize);
-                meshInd += 2;
-            } else {
-                meshInd++;
-            }
+            meshInd++;
 
         }
         dynamicShadowMeshes.truncate(meshInd);
