@@ -13,7 +13,7 @@ public class DesktopLauncher {
 		config.samples = 4;
 		config.depth = 0;
 		config.vSyncEnabled = true;
-
+		config.forceExit = false;
 		config.fullscreen = false;
 		new LwjglApplication(new Box2dLightTest(), config);
 	}
