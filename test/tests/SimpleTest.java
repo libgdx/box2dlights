@@ -30,7 +30,7 @@ public class SimpleTest extends ApplicationAdapter {
 	public void render() {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		world.step(Gdx.graphics.getDeltaTime(), 8, 3);
-		rayHandler.setCombinedMatrix(camera.combined);
+		rayHandler.setCombinedMatrix(camera);
 		rayHandler.updateAndRender();
 	}
 }
