@@ -4,7 +4,7 @@
 
 ### Eclipse ###
 .metadata
-bin/
+./bin/
 tmp/
 *.tmp
 *.bak
@@ -82,7 +82,7 @@ cmake-build-*/
 *.iws
 
 # IntelliJ
-out/
+./out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -147,7 +147,7 @@ buildNumber.properties
 
 ### Gradle ###
 .gradle
-build/
+./build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -157,9 +157,5 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
-
-# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
-# gradle/wrapper/gradle-wrapper.properties
-
 
 # End of https://www.gitignore.io/api/java,maven,gradle,eclipse,intellij+all
