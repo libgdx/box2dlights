@@ -143,7 +143,6 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
 .flattened-pom.xml
 
 ### Gradle ###
@@ -162,7 +161,5 @@ gradle-app.setting
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
 
-### Gradle Patch ###
-**/build/
 
 # End of https://www.gitignore.io/api/java,maven,gradle,eclipse,intellij+all
