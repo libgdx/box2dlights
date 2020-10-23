@@ -63,7 +63,7 @@ public abstract class Light implements Disposable {
 	 */
 	protected static final LightData tmpData = new LightData(0f);
 
-	protected float heightInDegrees = 0f;
+	protected float pseudo3dHeight = 0f;
 
 	protected final Array<Mesh> dynamicShadowMeshes = new Array<Mesh>();
 	//Should never be cleared except when the light changes position (not direction). Prevents shadows from disappearing when fixture is out of sight.
@@ -431,7 +431,7 @@ public abstract class Light implements Disposable {
 	}
 
 	public void setHeight(float height) {
-		this.heightInDegrees = height;
+		this.pseudo3dHeight = height;
 	}
 
 	/**

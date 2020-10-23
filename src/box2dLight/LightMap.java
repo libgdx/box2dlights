@@ -1,9 +1,6 @@
 package box2dLight;
 
-import shaders.DiffuseShader;
-import shaders.Gaussian;
-import shaders.ShadowShader;
-import shaders.WithoutShadowShader;
+import shaders.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -31,6 +28,10 @@ class LightMap {
 
 	public void render() {
 		boolean needed = rayHandler.lightRenderedLastFrame > 0;
+
+		// this way lot less binding
+		if (needed && rayHandler.blur)
+			gaussianBlur();
 
 		if (lightMapDrawingDisabled)
 			return;
@@ -71,7 +72,6 @@ class LightMap {
 			pingPongBuffer.begin();
 			{
 				blurShader.bind();
-		//		blurShader.setUniformi("u_texture", 0);
 				blurShader.setUniformf("dir", 1f, 0f);
 				lightMapMesh.render(blurShader, GL20.GL_TRIANGLE_FAN, 0, 4);
 
@@ -83,10 +83,8 @@ class LightMap {
 			frameBuffer.begin();
 			{
 				blurShader.bind();
-			//	blurShader.setUniformi("u_texture", 0);
 				blurShader.setUniformf("dir", 0f, 1f);
 				lightMapMesh.render(blurShader, GL20.GL_TRIANGLE_FAN, 0, 4);
-				System.out.println(blurShader.getLog());
 			}
 			if (rayHandler.customViewport) {
 				frameBuffer.end(

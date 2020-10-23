@@ -102,7 +102,7 @@ public class DirectionalLight extends Light {
 			xDisp = -sizeOfScreen * cos;
 			yDisp = -sizeOfScreen * sin;
 
-			prepeareFixtureData();
+			prepareFixtureData();
 			updateDynamicShadowMeshes();
 		}
 
@@ -144,7 +144,7 @@ public class DirectionalLight extends Light {
 			mx[i] = end[i].x = steppedX + xAxelOffSet;
 			my[i] = end[i].y = steppedY + yAxelOffSet;
 
-			if (rayHandler.world != null && !xray) {
+			if (rayHandler.world != null && !xray && !rayHandler.pseudo3d) {
 				rayHandler.world.rayCast(ray, start[i], end[i]);
 			}
 		}
@@ -197,13 +197,14 @@ public class DirectionalLight extends Light {
 			dynamicShadowRender();
 			rayHandler.simpleBlendFunc.apply();
 		}
+
 		if (soft && !xray && !rayHandler.pseudo3d) {
 			softShadowMesh.render(
 					rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
 		}
 	}
 
-	protected void prepeareFixtureData() {
+	protected void prepareFixtureData() {
 		rayHandler.world.QueryAABB(
 				dynamicShadowCallback,
 				rayHandler.x1, rayHandler.y1,
@@ -228,7 +229,7 @@ public class DirectionalLight extends Light {
 			lstart.set(center).add(xDisp, yDisp);
 
 			int shadowSize = 0;
-			float l = data.height / (float) Math.tan(heightInDegrees * MathUtils.degRad);
+			float l = data.height / (float) Math.tan(pseudo3dHeight * MathUtils.degRad);
 			float f = 1f / data.shadowsDropped;
 
 			float startColBits = rayHandler.shadowColorInterpolation
@@ -454,7 +455,7 @@ public class DirectionalLight extends Light {
                 height = degrees;
             }
         }*/
-		heightInDegrees = (degrees % 180) + 1;
+		pseudo3dHeight = (degrees % 180) + 1;
 	}
 
 	/**

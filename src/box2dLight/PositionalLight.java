@@ -86,8 +86,13 @@ public abstract class PositionalLight extends Light {
 		rayHandler.lightRenderedLastFrame++;
 		lightMesh.render(
 			rayHandler.lightShader, GL20.GL_TRIANGLE_FAN, 0, vertexNum);
-		
-		if (soft && !xray) {
+
+		if (rayHandler.pseudo3d) {
+			dynamicShadowRender();
+			rayHandler.simpleBlendFunc.apply();
+		}
+
+		if (soft && !xray && !rayHandler.pseudo3d) {
 			softShadowMesh.render(
 				rayHandler.lightShader,
 				GL20.GL_TRIANGLE_STRIP,
@@ -231,18 +236,48 @@ public abstract class PositionalLight extends Light {
 	}
 	
 	protected void updateMesh() {
-		for (int i = 0; i < rayNum; i++) {
-			m_index = i;
-			f[i] = 1f;
-			tmpEnd.x = endX[i] + start.x;
-			mx[i] = tmpEnd.x;
-			tmpEnd.y = endY[i] + start.y;
-			my[i] = tmpEnd.y;
-			if (rayHandler.world != null && !xray) {
-				rayHandler.world.rayCast(ray, start, tmpEnd);
+		if (!rayHandler.pseudo3d) {
+			for (int i = 0; i < rayNum; i++) {
+				m_index = i;
+				f[i] = 1f;
+				tmpEnd.x = endX[i] + start.x;
+				mx[i] = tmpEnd.x;
+				tmpEnd.y = endY[i] + start.y;
+				my[i] = tmpEnd.y;
+				if (rayHandler.world != null && !xray) {
+					rayHandler.world.rayCast(ray, start, tmpEnd);
+				}
 			}
+			setMesh();
+		} else {
+			setPseudo3dMesh();
 		}
-		setMesh();
+	}
+
+	protected void prepareFixtureData() {
+		rayHandler.world.QueryAABB(
+				dynamicShadowCallback,
+				start.x - distance, start.y - distance,
+				start.x + distance, start.y + distance);
+	}
+
+	protected void setPseudo3dMesh() {
+		// ray starting point
+		int size = 0;
+		float colorF = color.cpy().mul(1f / RayHandler.DYNAMIC_SHADOW_COLOR_REDUCTION).toFloatBits();
+
+		segments[size++] = start.x;
+		segments[size++] = start.y;
+		segments[size++] = colorF;
+		segments[size++] = 1f;
+		// rays ending points.
+		for (int i = 0; i < rayNum; i++) {
+			segments[size++] = start.x + endX[i];
+			segments[size++] = start.y + endY[i];
+			segments[size++] = colorF;
+			segments[size++] = 0f;
+		}
+		lightMesh.setVertices(segments, 0, size);
 	}
 
 	protected void setMesh() {
