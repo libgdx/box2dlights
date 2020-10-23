@@ -310,7 +310,7 @@ public class RayHandler implements Disposable {
 		}
 
 		ShaderProgram shader = customLightShader != null ? customLightShader : lightShader;
-		shader.begin();
+		shader.bind();
 		{
 			shader.setUniformMatrix("u_projTrans", combined);
 			if (customLightShader != null) updateLightShader();
@@ -319,7 +319,6 @@ public class RayHandler implements Disposable {
 				light.render();
 			}
 		}
-		shader.end();
 
 		if (useLightMap) {
 			if (customViewport) {

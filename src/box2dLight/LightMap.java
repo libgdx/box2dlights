@@ -68,18 +68,17 @@ class LightMap {
 	}
 
 	public void gaussianBlur() {
-
 		Gdx.gl20.glDisable(GL20.GL_BLEND);
 		for (int i = 0; i < rayHandler.blurNum; i++) {
 			frameBuffer.getColorBufferTexture().bind(0);
 			// horizontal
 			pingPongBuffer.begin();
 			{
-				blurShader.begin();
+				blurShader.bind();
 		//		blurShader.setUniformi("u_texture", 0);
 				blurShader.setUniformf("dir", 1f, 0f);
 				lightMapMesh.render(blurShader, GL20.GL_TRIANGLE_FAN, 0, 4);
-				blurShader.end();
+
 			}
 			pingPongBuffer.end();
 
@@ -87,12 +86,11 @@ class LightMap {
 			// vertical
 			frameBuffer.begin();
 			{
-				blurShader.begin();
+				blurShader.bind();
 			//	blurShader.setUniformi("u_texture", 0);
 				blurShader.setUniformf("dir", 0f, 1f);
 				lightMapMesh.render(blurShader, GL20.GL_TRIANGLE_FAN, 0, 4);
-				blurShader.end();
-
+				System.out.println(blurShader.getLog());
 			}
 			if (rayHandler.customViewport) {
 				frameBuffer.end(

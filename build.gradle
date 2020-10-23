@@ -15,7 +15,7 @@ sourceSets {
 	}
 }
 
-ext.gdxVersion = "1.9.10"
+ext.gdxVersion = "1.9.11"
 version = "1.6-SNAPSHOT"
 
 repositories {
