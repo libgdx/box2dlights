@@ -30,11 +30,17 @@ public class RayHandler implements Disposable {
 	static boolean gammaCorrection = false;
 	static float gammaCorrectionParameter = 1f;
 
+	/**
+	 * TODO: This could be made adaptive to ratio of camera sizes * zoom vs the
+	 * CircleShape radius - thus will provide smooth radial shadows while
+	 * resizing and zooming in and out
+	 */
+	static int CIRCLE_APPROX_POINTS = 32;
+
 	/** if this is public why we have a setter?
 	 * TODO: remove public modifier and add getter 
 	 * */
 	public static boolean isDiffuse = false;
-
 	/**
 	 * Blend function for lights rendering with both shadows and diffusion
 	 * <p>Default: (GL20.GL_DST_COLOR, GL20.GL_ZERO)
@@ -80,7 +86,11 @@ public class RayHandler implements Disposable {
 	boolean culling = true;
 	boolean shadows = true;
 	boolean blur = true;
-	
+
+	/** Experimental mode */
+	boolean pseudo3d = false;
+	boolean shadowColorInterpolation = false;
+
 	int blurNum = 1;
 	
 	boolean customViewport = false;
@@ -312,6 +322,7 @@ public class RayHandler implements Disposable {
 		ShaderProgram shader = customLightShader != null ? customLightShader : lightShader;
 		shader.bind();
 		{
+			lightShader.setUniformMatrix("u_projTrans", combined);
 			shader.setUniformMatrix("u_projTrans", combined);
 			if (customLightShader != null) updateLightShader();
 			for (Light light : lightList) {
@@ -609,6 +620,25 @@ public class RayHandler implements Disposable {
 	}
 
 	/**
+	 * /!\ Experimental mode with dynamic shadowing in pseudo-3d world
+	 *
+	 * @param flag
+	 */
+	public void setPseudo3dLight(boolean flag) {
+		pseudo3d = flag;
+	}
+
+	/**
+	 * /!\ Experimental mode with dynamic shadowing in pseudo-3d world
+	 *
+	 * @param flag
+	 */
+	public void setPseudo3dLight(boolean flag, boolean interpolateShadows) {
+		pseudo3d = flag;
+		shadowColorInterpolation = interpolateShadows;
+	}
+
+	/**
 	 * Enables/disables lightMap automatic rendering.
 	 * 
 	 * <p>If set to false user needs to use the {@link #getLightMapTexture()}
@@ -640,5 +670,4 @@ public class RayHandler implements Disposable {
 	public FrameBuffer getLightMapBuffer() {
 		return lightMap.frameBuffer;
 	}
-	
 }
