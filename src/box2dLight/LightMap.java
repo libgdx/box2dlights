@@ -24,6 +24,8 @@ class LightMap {
 	private ShaderProgram blurShader;
 	private ShaderProgram diffuseShader;
 
+	FrameBuffer shadowBuffer;
+
 	boolean lightMapDrawingDisabled;
 
 	public void render() {
@@ -31,13 +33,31 @@ class LightMap {
 
 		if (lightMapDrawingDisabled)
 			return;
-		frameBuffer.getColorBufferTexture().bind(0);
+		if (rayHandler.pseudo3d) {
+			frameBuffer.getColorBufferTexture().bind(1);
+			shadowBuffer.getColorBufferTexture().bind(0);
+		} else {
+			frameBuffer.getColorBufferTexture().bind(0);
+		}
 
 		// at last lights are rendered over scene
 		if (rayHandler.shadows) {
 			final Color c = rayHandler.ambientLight;
 			ShaderProgram shader = shadowShader;
-			if (RayHandler.isDiffuse) {
+			if (rayHandler.pseudo3d) {
+				shader.bind();
+				if (RayHandler.isDiffuse) {
+					rayHandler.diffuseBlendFunc.apply();
+					shader.setUniformf("ambient", c.r, c.g, c.b, c.a);
+				} else {
+					rayHandler.shadowBlendFunc.apply();
+					shader.setUniformf("ambient", c.r * c.a, c.g * c.a,
+							c.b * c.a, 1f - c.a);
+				}
+				shader.setUniformi("isDiffuse", RayHandler.isDiffuse ? 1 : 0);
+				shader.setUniformi("u_texture", 1);
+				shader.setUniformi("u_shadows", 0);
+			} else if (RayHandler.isDiffuse) {
 				shader = diffuseShader;
 				shader.bind();
 				rayHandler.diffuseBlendFunc.apply();
@@ -60,10 +80,10 @@ class LightMap {
 		Gdx.gl20.glDisable(GL20.GL_BLEND);
 	}
 
-	public void gaussianBlur() {
+	public void gaussianBlur(FrameBuffer buffer, int blurNum) {
 		Gdx.gl20.glDisable(GL20.GL_BLEND);
-		for (int i = 0; i < rayHandler.blurNum; i++) {
-			frameBuffer.getColorBufferTexture().bind(0);
+		for (int i = 0; i < blurNum; i++) {
+			buffer.getColorBufferTexture().bind(0);
 			// horizontal
 			pingPongBuffer.begin();
 			{
@@ -76,20 +96,20 @@ class LightMap {
 
 			pingPongBuffer.getColorBufferTexture().bind(0);
 			// vertical
-			frameBuffer.begin();
+			buffer.begin();
 			{
 				blurShader.bind();
 				blurShader.setUniformf("dir", 0f, 1f);
 				lightMapMesh.render(blurShader, GL20.GL_TRIANGLE_FAN, 0, 4);
 			}
 			if (rayHandler.customViewport) {
-				frameBuffer.end(
+				buffer.end(
 					rayHandler.viewportX,
 					rayHandler.viewportY,
 					rayHandler.viewportWidth,
 					rayHandler.viewportHeight);
 			} else {
-				frameBuffer.end();
+				buffer.end();
 			}
 		}
 
@@ -107,10 +127,12 @@ class LightMap {
 				fboHeight, false);
 		pingPongBuffer = new FrameBuffer(Format.RGBA8888, fboWidth,
 				fboHeight, false);
+		shadowBuffer = new FrameBuffer(Format.RGBA8888, fboWidth,
+				fboHeight, false);
 
 		lightMapMesh = createLightMapMesh();
 
-		shadowShader = ShadowShader.createShadowShader();
+		shadowShader = rayHandler.pseudo3d ? DynamicShadowShader.createShadowShader() : ShadowShader.createShadowShader();
 		diffuseShader = DiffuseShader.createShadowShader();
 
 		withoutShadowShader = WithoutShadowShader.createShadowShader();
@@ -125,7 +147,7 @@ class LightMap {
 		lightMapMesh.dispose();
 		frameBuffer.dispose();
 		pingPongBuffer.dispose();
-
+		shadowBuffer.dispose();
 	}
 
 	private Mesh createLightMapMesh() {

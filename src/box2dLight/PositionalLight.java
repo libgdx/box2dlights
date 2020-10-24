@@ -18,6 +18,8 @@ import com.badlogic.gdx.physics.box2d.*;
  */
 public abstract class PositionalLight extends Light {
 
+	Color tmpColor = new Color();
+
 	protected final Vector2 tmpEnd = new Vector2();
 	protected final Vector2 start = new Vector2();
 	
@@ -296,11 +298,13 @@ public abstract class PositionalLight extends Light {
 			float l = 0f;
 			float f = 1f / data.shadowsDropped;
 
+			tmpColor.set(Color.BLACK);
 			float startColBits = rayHandler.shadowColorInterpolation ?
-					Color.BLACK.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
-					zeroColorBits;
+					tmpColor.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
+					colorF;
+			tmpColor.set(Color.WHITE);
 			float endColBits = rayHandler.shadowColorInterpolation ?
-					Color.WHITE.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
+					tmpColor.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
 					colBits;
 
 			Shape fixtureShape = fixture.getShape();

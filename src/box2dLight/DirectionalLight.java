@@ -27,6 +27,8 @@ import com.badlogic.gdx.physics.box2d.Shape.Type;
  */
 public class DirectionalLight extends Light {
 
+	Color tmpColor = new Color();
+
 	protected final Vector2 start[];
 	protected final Vector2 end[];
 	protected float sin;
@@ -227,11 +229,13 @@ public class DirectionalLight extends Light {
 			float l = data.height / (float) Math.tan(pseudo3dHeight * MathUtils.degRad);
 			float f = 1f / data.shadowsDropped;
 
+			tmpColor.set(Color.BLACK);
 			float startColBits = rayHandler.shadowColorInterpolation
-					? Color.BLACK.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
+					? tmpColor.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
 					: zeroColorBits;
+			tmpColor.set(Color.WHITE);
 			float endColBits = rayHandler.shadowColorInterpolation
-					? Color.WHITE.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
+					? tmpColor.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
 					: colBits;
 
 			if (type == Type.Polygon || type == Type.Chain) {

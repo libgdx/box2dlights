@@ -37,6 +37,8 @@ public class RayHandler implements Disposable {
 	 */
 	static int CIRCLE_APPROX_POINTS = 32;
 
+	public static int dynamicShadowColorReduction = 1;
+
 	static int MAX_SHADOW_VERTICES = 64;
 
 	/** if this is public why we have a setter?
@@ -312,7 +314,6 @@ public class RayHandler implements Disposable {
 
 		Gdx.gl.glDepthMask(false);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
-		simpleBlendFunc.apply();
 
 		boolean useLightMap = (shadows || blur);
 		if (useLightMap) {
@@ -320,6 +321,8 @@ public class RayHandler implements Disposable {
 			Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		}
+
+		simpleBlendFunc.apply();
 
 		ShaderProgram shader = customLightShader != null ? customLightShader : lightShader;
 		shader.bind();
@@ -331,12 +334,6 @@ public class RayHandler implements Disposable {
 			for (Light light : lightList) {
 				if (customLightShader != null) updateLightShaderPerLight(light);
 				light.render();
-			}
-
-			if (pseudo3d) {
-				for (Light light : lightList) {
-					light.dynamicShadowRender();
-				}
 			}
 		}
 
@@ -352,10 +349,32 @@ public class RayHandler implements Disposable {
 			}
 		}
 
+		if (useLightMap && pseudo3d) {
+			lightMap.shadowBuffer.begin();
+			Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+			for (Light light : lightList) {
+				light.dynamicShadowRender();
+			}
+
+			if (customViewport) {
+				lightMap.shadowBuffer.end(
+						viewportX,
+						viewportY,
+						viewportWidth,
+						viewportHeight);
+			} else {
+				lightMap.shadowBuffer.end();
+			}
+		}
+
 		boolean needed = lightRenderedLastFrame > 0;
 		// this way lot less binding
 		if (needed && blur)
-			lightMap.gaussianBlur();
+			lightMap.gaussianBlur(lightMap.frameBuffer, blurNum);
+		if (needed && blur && pseudo3d)
+			lightMap.gaussianBlur(lightMap.shadowBuffer, blurNum);
 	}
 
 	/**
