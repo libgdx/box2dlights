@@ -327,9 +327,16 @@ public class RayHandler implements Disposable {
 			lightShader.setUniformMatrix("u_projTrans", combined);
 			shader.setUniformMatrix("u_projTrans", combined);
 			if (customLightShader != null) updateLightShader();
+
 			for (Light light : lightList) {
 				if (customLightShader != null) updateLightShaderPerLight(light);
 				light.render();
+			}
+
+			if (pseudo3d) {
+				for (Light light : lightList) {
+					light.dynamicShadowRender();
+				}
 			}
 		}
 
@@ -344,6 +351,11 @@ public class RayHandler implements Disposable {
 				lightMap.frameBuffer.end();
 			}
 		}
+
+		boolean needed = lightRenderedLastFrame > 0;
+		// this way lot less binding
+		if (needed && blur)
+			lightMap.gaussianBlur();
 	}
 
 	/**

@@ -85,11 +85,6 @@ public abstract class PositionalLight extends Light {
 		lightMesh.render(
 			rayHandler.lightShader, GL20.GL_TRIANGLE_FAN, 0, vertexNum);
 
-		if (rayHandler.pseudo3d) {
-			dynamicShadowRender();
-			rayHandler.simpleBlendFunc.apply();
-		}
-
 		if (soft && !xray && !rayHandler.pseudo3d) {
 			softShadowMesh.render(
 				rayHandler.lightShader,

@@ -193,11 +193,6 @@ public class DirectionalLight extends Light {
 		lightMesh.render(
 				rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);
 
-		if (rayHandler.pseudo3d) {
-			dynamicShadowRender();
-			rayHandler.simpleBlendFunc.apply();
-		}
-
 		if (soft && !xray && !rayHandler.pseudo3d) {
 			softShadowMesh.render(
 					rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP, 0, vertexNum);

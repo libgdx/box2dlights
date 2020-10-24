@@ -29,10 +29,6 @@ class LightMap {
 	public void render() {
 		boolean needed = rayHandler.lightRenderedLastFrame > 0;
 
-		// this way lot less binding
-		if (needed && rayHandler.blur)
-			gaussianBlur();
-
 		if (lightMapDrawingDisabled)
 			return;
 		frameBuffer.getColorBufferTexture().bind(0);
