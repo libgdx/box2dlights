@@ -37,7 +37,6 @@ public class RayHandler implements Disposable {
 	 */
 	static int CIRCLE_APPROX_POINTS = 32;
 
-	public static int DYNAMIC_SHADOW_COLOR_REDUCTION = 1;
 	static int MAX_SHADOW_VERTICES = 64;
 
 	/** if this is public why we have a setter?

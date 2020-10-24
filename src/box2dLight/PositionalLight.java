@@ -1,15 +1,13 @@
 
 package box2dLight;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Mesh.VertexDataType;
-import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.*;
 
 /**
  * Abstract base class for all positional lights
@@ -236,22 +234,18 @@ public abstract class PositionalLight extends Light {
 	}
 	
 	protected void updateMesh() {
-		if (!rayHandler.pseudo3d) {
-			for (int i = 0; i < rayNum; i++) {
-				m_index = i;
-				f[i] = 1f;
-				tmpEnd.x = endX[i] + start.x;
-				mx[i] = tmpEnd.x;
-				tmpEnd.y = endY[i] + start.y;
-				my[i] = tmpEnd.y;
-				if (rayHandler.world != null && !xray) {
-					rayHandler.world.rayCast(ray, start, tmpEnd);
-				}
+		for (int i = 0; i < rayNum; i++) {
+			m_index = i;
+			f[i] = 1f;
+			tmpEnd.x = endX[i] + start.x;
+			mx[i] = tmpEnd.x;
+			tmpEnd.y = endY[i] + start.y;
+			my[i] = tmpEnd.y;
+			if (rayHandler.world != null && !xray && !rayHandler.pseudo3d) {
+				rayHandler.world.rayCast(ray, start, tmpEnd);
 			}
-			setMesh();
-		} else {
-			setPseudo3dMesh();
 		}
+		setMesh();
 	}
 
 	protected void prepareFixtureData() {
@@ -259,25 +253,6 @@ public abstract class PositionalLight extends Light {
 				dynamicShadowCallback,
 				start.x - distance, start.y - distance,
 				start.x + distance, start.y + distance);
-	}
-
-	protected void setPseudo3dMesh() {
-		// ray starting point
-		int size = 0;
-		float colorF = color.cpy().mul(1f / RayHandler.DYNAMIC_SHADOW_COLOR_REDUCTION).toFloatBits();
-
-		segments[size++] = start.x;
-		segments[size++] = start.y;
-		segments[size++] = colorF;
-		segments[size++] = 1f;
-		// rays ending points.
-		for (int i = 0; i < rayNum; i++) {
-			segments[size++] = start.x + endX[i];
-			segments[size++] = start.y + endY[i];
-			segments[size++] = colorF;
-			segments[size++] = 0f;
-		}
-		lightMesh.setVertices(segments, 0, size);
 	}
 
 	protected void setMesh() {
@@ -297,7 +272,7 @@ public abstract class PositionalLight extends Light {
 		}
 		lightMesh.setVertices(segments, 0, size);
 
-		if (!soft || xray) return;
+		if (!soft || xray || rayHandler.pseudo3d) return;
 
 		size = 0;
 		// rays ending points.
@@ -313,6 +288,201 @@ public abstract class PositionalLight extends Light {
 			segments[size++] = 0f;
 		}
 		softShadowMesh.setVertices(segments, 0, size);
+	}
+
+	protected void updateDynamicShadowMeshes() {
+		int meshInd = 0;
+		float colBits = rayHandler.ambientLight.toFloatBits();
+		for (Fixture fixture : affectedFixtures) {
+			LightData data = (LightData)fixture.getUserData();
+			if (data == null || fixture.isSensor()) continue;
+
+			int size = 0;
+			float l = 0f;
+			float f = 1f / data.shadowsDropped;
+
+			float startColBits = rayHandler.shadowColorInterpolation ?
+					Color.BLACK.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
+					zeroColorBits;
+			float endColBits = rayHandler.shadowColorInterpolation ?
+					Color.WHITE.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
+					colBits;
+
+			Shape fixtureShape = fixture.getShape();
+			Shape.Type type = fixtureShape.getType();
+			Body body = fixture.getBody();
+			center.set(body.getWorldCenter());
+
+			if (type == Shape.Type.Polygon || type == Shape.Type.Chain) {
+				boolean isPolygon = (type == Shape.Type.Polygon);
+				ChainShape cShape = isPolygon ?
+						null : (ChainShape)fixtureShape;
+				PolygonShape pShape = isPolygon ?
+						(PolygonShape)fixtureShape : null;
+				int vertexCount = isPolygon ?
+						pShape.getVertexCount() : cShape.getVertexCount();
+				int minN = -1;
+				int maxN = -1;
+				int minDstN = -1;
+				float minDst = Float.POSITIVE_INFINITY;
+				boolean hasGasp = false;
+				tmpVerts.clear();
+				for (int n = 0; n < vertexCount; n++) {
+					if (isPolygon) {
+						pShape.getVertex(n, tmpVec);
+					} else {
+						cShape.getVertex(n, tmpVec);
+					}
+					tmpVec.set(body.getWorldPoint(tmpVec));
+					tmpVerts.add(tmpVec.cpy());
+					tmpEnd.set(tmpVec).sub(start).limit2(0.0001f).add(tmpVec);
+					if (fixture.testPoint(tmpEnd)) {
+						if (minN == -1) minN = n;
+						maxN = n;
+						hasGasp = true;
+						continue;
+					}
+
+					float currDist = tmpVec.dst2(start);
+					if (currDist < minDst) {
+						minDst = currDist;
+						minDstN = n;
+					}
+				}
+
+				ind.clear();
+				if (!hasGasp) {
+					tmpVec.set(tmpVerts.get(minDstN));
+					for (int n = minDstN; n < vertexCount; n++) {
+						ind.add(n);
+					}
+					for (int n = 0; n < minDstN; n++) {
+						ind.add(n);
+					}
+					if (Intersector.pointLineSide(start, center, tmpVec) > 0) {
+						ind.reverse();
+						ind.insert(0, ind.pop());
+					}
+				} else if (minN == 0 && maxN == vertexCount - 1) {
+					for (int n = maxN - 1; n > minN; n--) {
+						ind.add(n);
+					}
+				} else {
+					for (int n = minN - 1; n > -1; n--) {
+						ind.add(n);
+					}
+					for (int n = vertexCount - 1; n > maxN ; n--) {
+						ind.add(n);
+					}
+				}
+
+				boolean contained = false;
+				for (int n : ind.toArray()) {
+					tmpVec.set(tmpVerts.get(n));
+					if (contains(tmpVec.x, tmpVec.y)){
+						contained = true;
+						break;
+					}
+				}
+
+				if (!contained)
+					continue;
+
+				for (int n : ind.toArray()) {
+					tmpVec.set(tmpVerts.get(n));
+
+					float dst = tmpVec.dst(start);
+					l = data.getLimit(dst, pseudo3dHeight, distance);
+					tmpEnd.set(tmpVec).sub(start).setLength(l).add(tmpVec);
+
+					segments[size++] = tmpVec.x;
+					segments[size++] = tmpVec.y;
+					segments[size++] = startColBits;
+					segments[size++] = f;
+
+					segments[size++] = tmpEnd.x;
+					segments[size++] = tmpEnd.y;
+					segments[size++] = endColBits;
+					segments[size++] = f;
+				}
+			} else if (type == Shape.Type.Circle) {
+				CircleShape shape = (CircleShape)fixtureShape;
+				float r = shape.getRadius();
+				float dst = tmpVec.set(center).dst(start);
+				float a = (float) Math.acos(r/dst);
+				l = data.getLimit(dst, pseudo3dHeight, distance);
+
+				tmpVec.set(start).sub(center).clamp(r, r).rotateRad(a);
+				tmpStart.set(center).add(tmpVec);
+
+				float angle = (MathUtils.PI2 - 2f * a) /
+						RayHandler.CIRCLE_APPROX_POINTS;
+				for (int k = 0; k < RayHandler.CIRCLE_APPROX_POINTS; k++) {
+					tmpStart.set(center).add(tmpVec);
+					segments[size++] = tmpStart.x;
+					segments[size++] = tmpStart.y;
+					segments[size++] = startColBits;
+					segments[size++] = f;
+
+					tmpEnd.set(tmpStart).sub(start).setLength(l).add(tmpStart);
+					segments[size++] = tmpEnd.x;
+					segments[size++] = tmpEnd.y;
+					segments[size++] = endColBits;
+					segments[size++] = f;
+
+					tmpVec.rotateRad(angle);
+				}
+			} else if (type == Shape.Type.Edge) {
+				EdgeShape shape = (EdgeShape)fixtureShape;
+
+				shape.getVertex1(tmpVec);
+				tmpVec.set(body.getWorldPoint(tmpVec));
+				float dst = tmpVec.dst(start);
+				l = data.getLimit(dst, pseudo3dHeight, distance);
+
+				segments[size++] = tmpVec.x;
+				segments[size++] = tmpVec.y;
+				segments[size++] = startColBits;
+				segments[size++] = f;
+
+				tmpEnd.set(tmpVec).sub(start).setLength(l).add(tmpVec);
+				segments[size++] = tmpEnd.x;
+				segments[size++] = tmpEnd.y;
+				segments[size++] = endColBits;
+				segments[size++] = f;
+
+				shape.getVertex2(tmpVec);
+				tmpVec.set(body.getWorldPoint(tmpVec));
+				dst = tmpVec.dst(start);
+				l = data.getLimit(dst, pseudo3dHeight, distance);
+
+				segments[size++] = tmpVec.x;
+				segments[size++] = tmpVec.y;
+				segments[size++] = startColBits;
+				segments[size++] = f;
+
+				tmpEnd.set(tmpVec).sub(start).setLength(l).add(tmpVec);
+				segments[size++] = tmpEnd.x;
+				segments[size++] = tmpEnd.y;
+				segments[size++] = endColBits;
+				segments[size++] = f;
+			}
+
+			Mesh mesh = null;
+			if (meshInd >= dynamicShadowMeshes.size) {
+				mesh = new Mesh(
+						Mesh.VertexDataType.VertexArray, false, RayHandler.MAX_SHADOW_VERTICES, 0,
+						new VertexAttribute(VertexAttributes.Usage.Position, 2, "vertex_positions"),
+						new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "quad_colors"),
+						new VertexAttribute(VertexAttributes.Usage.Generic, 1, "s"));
+				dynamicShadowMeshes.add(mesh);
+			} else {
+				mesh = dynamicShadowMeshes.get(meshInd);
+			}
+			mesh.setVertices(segments, 0, size);
+			meshInd++;
+		}
+		dynamicShadowMeshes.truncate(meshInd);
 	}
 
 	public float getBodyOffsetX() {
