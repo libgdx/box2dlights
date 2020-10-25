@@ -177,6 +177,10 @@ public abstract class PositionalLight extends Light {
 		if (staticLight) dirty = true;
 	}
 
+	public boolean contains(Vector2 pos) {
+		return contains(pos.x, pos.y);
+	}
+
 	@Override
 	public boolean contains(float x, float y) {
 		// fast fail
@@ -409,6 +413,11 @@ public abstract class PositionalLight extends Light {
 			} else if (type == Shape.Type.Circle) {
 				CircleShape shape = (CircleShape)fixtureShape;
 				float r = shape.getRadius();
+				if (!contains(tmpVec.set(center).add(r, r)) && !contains(tmpVec.set(center).add(-r, -r))
+						&& !contains(tmpVec.set(center).add(r, -r)) && !contains(tmpVec.set(center).add(-r, r))) {
+					continue;
+				}
+
 				float dst = tmpVec.set(center).dst(start);
 				float a = (float) Math.acos(r/dst);
 				l = data.getLimit(dst, pseudo3dHeight, distance);
@@ -448,6 +457,9 @@ public abstract class PositionalLight extends Light {
 
 				shape.getVertex1(tmpVec);
 				tmpVec.set(body.getWorldPoint(tmpVec));
+				if (!contains(tmpVec)) {
+					continue;
+				}
 				float dst = tmpVec.dst(start);
 				l = data.getLimit(dst, pseudo3dHeight, distance);
 				float f1 = 1f - dst / distance;
@@ -474,6 +486,9 @@ public abstract class PositionalLight extends Light {
 
 				shape.getVertex2(tmpVec);
 				tmpVec.set(body.getWorldPoint(tmpVec));
+				if (!contains(tmpVec)) {
+					continue;
+				}
 				dst = tmpVec.dst(start);
 				l = data.getLimit(dst, pseudo3dHeight, distance);
 				f1 = 1f - dst / distance;
