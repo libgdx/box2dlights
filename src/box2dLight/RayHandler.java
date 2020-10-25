@@ -124,7 +124,7 @@ public class RayHandler implements Disposable {
 	 *     <li>ambientLight = 0f
 	 * </ul>
 	 * 
-	 * @see #RayHandler(World, int, int)
+	 * @see #RayHandler(World, int, int, RayHandlerOptions)
 	 */
 	public RayHandler(World world) {
 		this(world, Gdx.graphics.getWidth() / 4, Gdx.graphics

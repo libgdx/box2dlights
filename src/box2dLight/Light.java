@@ -119,11 +119,6 @@ public abstract class Light implements Disposable {
 	 * Render this light shadow
 	 */
 	protected void dynamicShadowRender() {
-		/*if (rayHandler.shadows) {
-			rayHandler.diffuseBlendFunc.apply();
-		} else {
-			rayHandler.shadowBlendFunc.apply();
-		}*/
 		for (Mesh m : dynamicShadowMeshes) {
 			m.render(rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP);
 		}
