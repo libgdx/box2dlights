@@ -295,17 +295,7 @@ public abstract class PositionalLight extends Light {
 			if (data == null || fixture.isSensor()) continue;
 
 			int size = 0;
-			float l = 0f;
-			float f = 1f / data.shadowsDropped;
-
-			tmpColor.set(Color.BLACK);
-			float startColBits = rayHandler.shadowColorInterpolation ?
-					tmpColor.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
-					colorF;
-			tmpColor.set(Color.WHITE);
-			float endColBits = rayHandler.shadowColorInterpolation ?
-					tmpColor.lerp(rayHandler.ambientLight, 1-f).toFloatBits() :
-					colBits;
+			float l;
 
 			Shape fixtureShape = fixture.getShape();
 			Shape.Type type = fixtureShape.getType();
@@ -394,15 +384,27 @@ public abstract class PositionalLight extends Light {
 					l = data.getLimit(dst, pseudo3dHeight, distance);
 					tmpEnd.set(tmpVec).sub(start).setLength(l).add(tmpVec);
 
+					float f1 = 1f - dst / distance;
+					float f2 = 1f - (dst + l) / distance;
+
+					tmpColor.set(Color.BLACK);
+					float startColBits = rayHandler.shadowColorInterpolation ?
+							tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
+							colorF;
+					tmpColor.set(Color.WHITE);
+					float endColBits = rayHandler.shadowColorInterpolation ?
+							tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
+							colBits;
+
 					segments[size++] = tmpVec.x;
 					segments[size++] = tmpVec.y;
 					segments[size++] = startColBits;
-					segments[size++] = f;
+					segments[size++] = f1;
 
 					segments[size++] = tmpEnd.x;
 					segments[size++] = tmpEnd.y;
 					segments[size++] = endColBits;
-					segments[size++] = f;
+					segments[size++] = f2;
 				}
 			} else if (type == Shape.Type.Circle) {
 				CircleShape shape = (CircleShape)fixtureShape;
@@ -410,6 +412,16 @@ public abstract class PositionalLight extends Light {
 				float dst = tmpVec.set(center).dst(start);
 				float a = (float) Math.acos(r/dst);
 				l = data.getLimit(dst, pseudo3dHeight, distance);
+				float f1 = 1f - dst / distance;
+				float f2 = 1f - (dst + l) / distance;
+				tmpColor.set(Color.BLACK);
+				float startColBits = rayHandler.shadowColorInterpolation ?
+						tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
+						colorF;
+				tmpColor.set(Color.WHITE);
+				float endColBits = rayHandler.shadowColorInterpolation ?
+						tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
+						colBits;
 
 				tmpVec.set(start).sub(center).clamp(r, r).rotateRad(a);
 				tmpStart.set(center).add(tmpVec);
@@ -421,13 +433,13 @@ public abstract class PositionalLight extends Light {
 					segments[size++] = tmpStart.x;
 					segments[size++] = tmpStart.y;
 					segments[size++] = startColBits;
-					segments[size++] = f;
+					segments[size++] = f1;
 
 					tmpEnd.set(tmpStart).sub(start).setLength(l).add(tmpStart);
 					segments[size++] = tmpEnd.x;
 					segments[size++] = tmpEnd.y;
 					segments[size++] = endColBits;
-					segments[size++] = f;
+					segments[size++] = f2;
 
 					tmpVec.rotateRad(angle);
 				}
@@ -438,33 +450,53 @@ public abstract class PositionalLight extends Light {
 				tmpVec.set(body.getWorldPoint(tmpVec));
 				float dst = tmpVec.dst(start);
 				l = data.getLimit(dst, pseudo3dHeight, distance);
+				float f1 = 1f - dst / distance;
+				float f2 = 1f - (dst + l) / distance;
+				tmpColor.set(Color.BLACK);
+				float startColBits = rayHandler.shadowColorInterpolation ?
+						tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
+						colorF;
+				tmpColor.set(Color.WHITE);
+				float endColBits = rayHandler.shadowColorInterpolation ?
+						tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
+						colBits;
 
 				segments[size++] = tmpVec.x;
 				segments[size++] = tmpVec.y;
 				segments[size++] = startColBits;
-				segments[size++] = f;
+				segments[size++] = f1;
 
 				tmpEnd.set(tmpVec).sub(start).setLength(l).add(tmpVec);
 				segments[size++] = tmpEnd.x;
 				segments[size++] = tmpEnd.y;
 				segments[size++] = endColBits;
-				segments[size++] = f;
+				segments[size++] = f2;
 
 				shape.getVertex2(tmpVec);
 				tmpVec.set(body.getWorldPoint(tmpVec));
 				dst = tmpVec.dst(start);
 				l = data.getLimit(dst, pseudo3dHeight, distance);
+				f1 = 1f - dst / distance;
+				f2 = 1f - (dst + l) / distance;
+				tmpColor.set(Color.BLACK);
+				startColBits = rayHandler.shadowColorInterpolation ?
+						tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
+						colorF;
+				tmpColor.set(Color.WHITE);
+				endColBits = rayHandler.shadowColorInterpolation ?
+						tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
+						colBits;
 
 				segments[size++] = tmpVec.x;
 				segments[size++] = tmpVec.y;
 				segments[size++] = startColBits;
-				segments[size++] = f;
+				segments[size++] = f1;
 
 				tmpEnd.set(tmpVec).sub(start).setLength(l).add(tmpVec);
 				segments[size++] = tmpEnd.x;
 				segments[size++] = tmpEnd.y;
 				segments[size++] = endColBits;
-				segments[size++] = f;
+				segments[size++] = f2;
 			}
 
 			Mesh mesh = null;
