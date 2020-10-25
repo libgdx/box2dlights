@@ -110,9 +110,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		normalProjection.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		/** BOX2D LIGHT STUFF BEGIN */
-		RayHandler.setGammaCorrection(true);
-		RayHandler.useDiffuseLight(true);
-
 		normalShader = createNormalShader();
 
 		lightShader = createLightShader();
@@ -127,6 +124,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 				lightShader.setUniformf("u_intensity", 5);
 			}
 		};
+		rayHandler.setGammaCorrection(true);
+		rayHandler.useDiffuseLight(true);
 		rayHandler.setLightShader(lightShader);
 		rayHandler.setAmbientLight(0.1f, 0.1f, 0.1f, 0.5f);
 		rayHandler.setBlurNum(0);

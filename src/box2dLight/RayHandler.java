@@ -44,7 +44,7 @@ public class RayHandler implements Disposable {
 	/** if this is public why we have a setter?
 	 * TODO: remove public modifier and add getter 
 	 * */
-	public static boolean isDiffuse = false;
+	static boolean isDiffuse = false;
 	/**
 	 * Blend function for lights rendering with both shadows and diffusion
 	 * <p>Default: (GL20.GL_DST_COLOR, GL20.GL_ZERO)
@@ -609,9 +609,10 @@ public class RayHandler implements Disposable {
 	 * <p>NOTE: To match the visuals with gamma uncorrected lights the light
 	 * distance parameters is modified implicitly.
 	 */
-	public static void setGammaCorrection(boolean gammaCorrectionWanted) {
+	public void setGammaCorrection(boolean gammaCorrectionWanted) {
 		gammaCorrection = gammaCorrectionWanted;
 		gammaCorrectionParameter = gammaCorrection ? GAMMA_COR : 1f;
+		lightMap.createShaders();
 	}
 
 	/**
@@ -621,10 +622,15 @@ public class RayHandler implements Disposable {
 	 * more realistic model than normally used as it preserve colors but might
 	 * look bit darker and also it might improve performance slightly.
 	 */
-	public static void useDiffuseLight(boolean useDiffuse) {
+	public void useDiffuseLight(boolean useDiffuse) {
 		isDiffuse = useDiffuse;
+		lightMap.createShaders();
 	}
-	
+
+	public static boolean isDiffuseLight() {
+		return isDiffuse;
+	}
+
 	/**
 	 * Sets rendering to custom viewport with specified position and size
 	 * <p>Note: you will be responsible for update of viewport via this method
@@ -650,20 +656,23 @@ public class RayHandler implements Disposable {
 	/**
 	 * /!\ Experimental mode with dynamic shadowing in pseudo-3d world
 	 *
-	 * @param flag
+	 * @param flag enable pseudo 3d effect
 	 */
 	public void setPseudo3dLight(boolean flag) {
-		pseudo3d = flag;
+		setPseudo3dLight(flag, false);
 	}
 
 	/**
 	 * /!\ Experimental mode with dynamic shadowing in pseudo-3d world
 	 *
-	 * @param flag
+	 * @param flag enable pseudo 3d effect
+	 * @param interpolateShadows interpolate shadow color
 	 */
 	public void setPseudo3dLight(boolean flag, boolean interpolateShadows) {
 		pseudo3d = flag;
 		shadowColorInterpolation = interpolateShadows;
+
+		lightMap.createShaders();
 	}
 
 	/**

@@ -106,10 +106,9 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 				0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		/** BOX2D LIGHT STUFF BEGIN */
-		RayHandler.setGammaCorrection(true);
-		RayHandler.useDiffuseLight(true);
-
 		rayHandler = new RayHandler(world);
+		rayHandler.setGammaCorrection(true);
+		rayHandler.useDiffuseLight(true);
 		//rayHandler.setAmbientLight(0f, 0f, 0f, 0.5f);
 		//rayHandler.setBlurNum(3);
 		rayHandler.setShadows(true);
