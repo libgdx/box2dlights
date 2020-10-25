@@ -37,7 +37,7 @@ public class RayHandler implements Disposable {
 	 */
 	static int CIRCLE_APPROX_POINTS = 32;
 
-	public static int dynamicShadowColorReduction = 1;
+	public static float dynamicShadowColorReduction = 1;
 
 	static int MAX_SHADOW_VERTICES = 64;
 
