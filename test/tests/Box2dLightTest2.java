@@ -2,13 +2,7 @@ package tests;
 
 import java.util.ArrayList;
 
-import box2dLight.ChainLight;
-import box2dLight.ConeLight;
-import box2dLight.DirectionalLight;
-import box2dLight.Light;
-import box2dLight.LightData;
-import box2dLight.PointLight;
-import box2dLight.RayHandler;
+import box2dLight.*;
 import com.badlogic.gdx.Application;
 
 import com.badlogic.gdx.ApplicationListener;
@@ -105,14 +99,15 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		normalProjection.setToOrtho2D(
 				0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
+		RayHandlerOptions options = new RayHandlerOptions();
+		options.setDiffuse(true);
+		options.setGammaCorrection(true);
+		options.setPseudo3d(true);
 		/** BOX2D LIGHT STUFF BEGIN */
-		rayHandler = new RayHandler(world);
-		rayHandler.setGammaCorrection(true);
-		rayHandler.useDiffuseLight(true);
+		rayHandler = new RayHandler(world, options);
 		//rayHandler.setAmbientLight(0f, 0f, 0f, 0.5f);
 		//rayHandler.setBlurNum(3);
 		rayHandler.setShadows(true);
-		rayHandler.setPseudo3dLight(true);
 		initPointLights();
 		/** BOX2D LIGHT STUFF END */
 
