@@ -232,7 +232,7 @@ public class DirectionalLight extends Light {
 			tmpColor.set(Color.BLACK);
 			float startColBits = rayHandler.shadowColorInterpolation
 					? tmpColor.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
-					: zeroColorBits;
+					: colorF;
 			tmpColor.set(Color.WHITE);
 			float endColBits = rayHandler.shadowColorInterpolation
 					? tmpColor.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()

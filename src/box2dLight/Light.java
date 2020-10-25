@@ -26,7 +26,6 @@ public abstract class Light implements Disposable {
 
 	static final Color DefaultColor = new Color(0.75f, 0.75f, 0.5f, 0.75f);
 	static final float zeroColorBits = Color.toFloatBits(0f, 0f, 0f, 0f);
-	static final float oneColorBits = Color.toFloatBits(1f, 1f, 1f, 1f);
 	static final int MIN_RAYS = 3;
 	
 	protected final Color color = new Color();
