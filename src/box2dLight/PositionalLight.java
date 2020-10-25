@@ -390,7 +390,7 @@ public abstract class PositionalLight extends Light {
 					tmpColor.set(Color.BLACK);
 					float startColBits = rayHandler.shadowColorInterpolation ?
 							tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
-							colorF;
+							oneColorBits;
 					tmpColor.set(Color.WHITE);
 					float endColBits = rayHandler.shadowColorInterpolation ?
 							tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
@@ -417,7 +417,7 @@ public abstract class PositionalLight extends Light {
 				tmpColor.set(Color.BLACK);
 				float startColBits = rayHandler.shadowColorInterpolation ?
 						tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
-						colorF;
+						oneColorBits;
 				tmpColor.set(Color.WHITE);
 				float endColBits = rayHandler.shadowColorInterpolation ?
 						tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
@@ -455,7 +455,7 @@ public abstract class PositionalLight extends Light {
 				tmpColor.set(Color.BLACK);
 				float startColBits = rayHandler.shadowColorInterpolation ?
 						tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
-						colorF;
+						oneColorBits;
 				tmpColor.set(Color.WHITE);
 				float endColBits = rayHandler.shadowColorInterpolation ?
 						tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :
@@ -481,7 +481,7 @@ public abstract class PositionalLight extends Light {
 				tmpColor.set(Color.BLACK);
 				startColBits = rayHandler.shadowColorInterpolation ?
 						tmpColor.lerp(rayHandler.ambientLight, f1).toFloatBits() :
-						colorF;
+						oneColorBits;
 				tmpColor.set(Color.WHITE);
 				endColBits = rayHandler.shadowColorInterpolation ?
 						tmpColor.lerp(rayHandler.ambientLight, f2).toFloatBits() :

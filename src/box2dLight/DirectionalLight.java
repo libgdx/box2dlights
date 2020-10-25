@@ -26,7 +26,7 @@ import com.badlogic.gdx.physics.box2d.Shape.Type;
  * @author kalle_h
  */
 public class DirectionalLight extends Light {
-
+	protected boolean flipDirection = false;
 	Color tmpColor = new Color();
 
 	protected final Vector2 start[];
@@ -89,6 +89,7 @@ public class DirectionalLight extends Light {
 
 	@Override
 	public void setDirection (float direction) {
+		if (flipDirection) direction += 180;
 		this.direction = direction;
 		sin = MathUtils.sinDeg(direction);
 		cos = MathUtils.cosDeg(direction);
@@ -227,12 +228,12 @@ public class DirectionalLight extends Light {
 
 			int shadowSize = 0;
 			float l = data.height / (float) Math.tan(pseudo3dHeight * MathUtils.degRad);
-			float f = 1f / data.shadowsDropped;
+			float f = 1f;
 
 			tmpColor.set(Color.BLACK);
 			float startColBits = rayHandler.shadowColorInterpolation
 					? tmpColor.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
-					: colorF;
+					: oneColorBits;
 			tmpColor.set(Color.WHITE);
 			float endColBits = rayHandler.shadowColorInterpolation
 					? tmpColor.lerp(rayHandler.ambientLight, 1 - f).toFloatBits()
@@ -442,19 +443,19 @@ public class DirectionalLight extends Light {
 	 */
 	@Override
 	public void setHeight(float degrees) {
-        /*if (degrees < 0f) {
-            height = 0f;
-        } else {
-            degrees = degrees % 360;
-            if (degrees > 180f) {
-                height = -1f;
-            } else if (degrees > 90f) {
-                height = degrees - 90;
-            } else {
-                height = degrees;
-            }
-        }*/
-		pseudo3dHeight = (degrees % 180) + 1;
+		flipDirection = false;
+		if (degrees < 0f) pseudo3dHeight = 0f;
+		else {
+			degrees = degrees % 360;
+			if (degrees > 180f) {
+				pseudo3dHeight = -1f;
+			}
+			else if (degrees > 90f) {
+				pseudo3dHeight = 180f - degrees;
+				flipDirection = true;
+			}
+			else pseudo3dHeight = degrees;
+		}
 	}
 
 	/**
