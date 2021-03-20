@@ -1,6 +1,7 @@
 
 package box2dLight;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Mesh.VertexDataType;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -59,10 +60,14 @@ public abstract class PositionalLight extends Light {
 		start.x = x;
 		start.y = y;
 
-		lightMesh = new Mesh(VertexDataType.VertexArray, false, vertexNum, 0, new VertexAttribute(Usage.Position, 2,
+		Mesh.VertexDataType vertexDataType = Mesh.VertexDataType.VertexArray;
+		if (Gdx.gl30 != null) {
+			vertexDataType = VertexDataType.VertexBufferObjectWithVAO;
+		}
+		lightMesh = new Mesh(vertexDataType, false, vertexNum, 0, new VertexAttribute(Usage.Position, 2,
 			"vertex_positions"), new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
 			new VertexAttribute(Usage.Generic, 1, "s"));
-		softShadowMesh = new Mesh(VertexDataType.VertexArray, false, vertexNum * 2, 0, new VertexAttribute(Usage.Position, 2,
+		softShadowMesh = new Mesh(vertexDataType, false, vertexNum * 2, 0, new VertexAttribute(Usage.Position, 2,
 			"vertex_positions"), new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
 			new VertexAttribute(Usage.Generic, 1, "s"));
 		setMesh();
@@ -84,8 +89,7 @@ public abstract class PositionalLight extends Light {
 		if (rayHandler.culling && culled) return;
 
 		rayHandler.lightRenderedLastFrame++;
-		lightMesh.render(
-			rayHandler.lightShader, GL20.GL_TRIANGLE_FAN, 0, vertexNum);
+		lightMesh.render(rayHandler.lightShader, GL20.GL_TRIANGLE_FAN, 0, vertexNum);
 
 		if (soft && !xray && !rayHandler.pseudo3d) {
 			softShadowMesh.render(

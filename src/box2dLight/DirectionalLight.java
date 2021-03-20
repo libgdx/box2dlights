@@ -1,5 +1,6 @@
 package box2dLight;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
@@ -72,14 +73,19 @@ public class DirectionalLight extends Light {
 			start[i] = new Vector2();
 			end[i] = new Vector2();
 		}
+
+		Mesh.VertexDataType vertexDataType = Mesh.VertexDataType.VertexArray;
+		if (Gdx.gl30 != null) {
+			vertexDataType = VertexDataType.VertexBufferObjectWithVAO;
+		}
 		
 		lightMesh = new Mesh(
-				VertexDataType.VertexArray, staticLight, vertexNum, 0,
+				vertexDataType, staticLight, vertexNum, 0,
 				new VertexAttribute(Usage.Position, 2, "vertex_positions"),
 				new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
 				new VertexAttribute(Usage.Generic, 1, "s"));
 		softShadowMesh = new Mesh(
-				VertexDataType.VertexArray, staticLight, vertexNum, 0,
+				vertexDataType, staticLight, vertexNum, 0,
 				new VertexAttribute(Usage.Position, 2, "vertex_positions"),
 				new VertexAttribute(Usage.ColorPacked, 4, "quad_colors"),
 				new VertexAttribute(Usage.Generic, 1, "s"));
