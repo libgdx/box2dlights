@@ -1,13 +1,17 @@
 package box2dLight;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.QueryCallback;
 import com.badlogic.gdx.physics.box2d.RayCastCallback;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.IntArray;
 
 /**
  * Light is data container for all the light parameters. When created lights
@@ -22,6 +26,7 @@ public abstract class Light implements Disposable {
 
 	static final Color DefaultColor = new Color(0.75f, 0.75f, 0.5f, 0.75f);
 	static final float zeroColorBits = Color.toFloatBits(0f, 0f, 0f, 0f);
+	static final float oneColorBits = Color.toFloatBits(1f, 1f, 1f, 1f);
 	static final int MIN_RAYS = 3;
 	
 	protected final Color color = new Color();
@@ -54,7 +59,26 @@ public abstract class Light implements Disposable {
 	protected float[] f;
 	protected int m_index = 0;
 
-	/** 
+	/**
+	 * Dynamic shadows variables *
+	 */
+	protected static final LightData tmpData = new LightData(0f);
+
+	protected float pseudo3dHeight = 0f;
+
+	protected final Array<Mesh> dynamicShadowMeshes = new Array<Mesh>();
+	//Should never be cleared except when the light changes position (not direction). Prevents shadows from disappearing when fixture is out of sight.
+	protected final Array<Fixture> affectedFixtures = new Array<Fixture>();
+	protected final Array<Vector2> tmpVerts = new Array<Vector2>();
+
+	protected final IntArray ind = new IntArray();
+
+	protected final Vector2 tmpStart = new Vector2();
+	protected final Vector2 tmpEnd = new Vector2();
+	protected final Vector2 tmpVec = new Vector2();
+	protected final Vector2 center = new Vector2();
+
+	/**
 	 * Creates new active light and automatically adds it to the specified
 	 * {@link RayHandler} instance.
 	 * 
@@ -71,7 +95,7 @@ public abstract class Light implements Disposable {
 	 *            direction in degrees (if applicable) 
 	 */
 	public Light(RayHandler rayHandler, int rays, Color color,
-			float distance, float directionDegree) {
+				 float distance, float directionDegree) {
 		rayHandler.lightList.add(this);
 		this.rayHandler = rayHandler;
 		setRayNum(rays);
@@ -90,7 +114,16 @@ public abstract class Light implements Disposable {
 	 * Render this light
 	 */
 	abstract void render();
-	
+
+	/**
+	 * Render this light shadow
+	 */
+	protected void dynamicShadowRender() {
+		for (Mesh m : dynamicShadowMeshes) {
+			m.render(rayHandler.lightShader, GL20.GL_TRIANGLE_STRIP);
+		}
+	}
+
 	/**
 	 * Sets light distance
 	 * 
@@ -230,8 +263,13 @@ public abstract class Light implements Disposable {
 	 * Disposes all light resources
 	 */
 	public void dispose() {
+		affectedFixtures.clear();
 		lightMesh.dispose();
 		softShadowMesh.dispose();
+		for (Mesh mesh : dynamicShadowMeshes) {
+			mesh.dispose();
+		}
+		dynamicShadowMeshes.clear();
 	}
 
 	/**
@@ -353,7 +391,6 @@ public abstract class Light implements Disposable {
 		return distance / RayHandler.gammaCorrectionParameter;
 	}
 
-
 	/**
 	 * @return direction in degrees (0 if not applicable)
 	 */
@@ -388,7 +425,11 @@ public abstract class Light implements Disposable {
 	public boolean getIgnoreAttachedBody() {
 		return ignoreBody;
 	}
-	
+
+	public void setHeight(float height) {
+		this.pseudo3dHeight = height;
+	}
+
 	/**
 	 * Internal method for mesh update depending on ray number
 	 */
@@ -434,7 +475,6 @@ public abstract class Light implements Disposable {
 			
 			// if (fixture.isSensor())
 			// return -1;
-			
 			mx[m_index] = point.x;
 			my[m_index] = point.y;
 			f[m_index] = fraction;
@@ -507,5 +547,39 @@ public abstract class Light implements Disposable {
 		globalFilterA.groupIndex = groupIndex;
 		globalFilterA.maskBits = maskBits;
 	}
+
+	protected boolean onDynamicCallback(Fixture fixture) {
+
+		if ((globalFilterA != null) && !globalContactFilter(fixture)) {
+			return false;
+		}
+
+		if ((filterA != null) && !contactFilter(fixture)) {
+			return false;
+		}
+
+		if (ignoreBody && fixture.getBody() == getBody()) {
+			return false;
+		}
+		//We only add the affectedFixtures once
+		return !affectedFixtures.contains(fixture, true);
+	}
+
+	final QueryCallback dynamicShadowCallback = new QueryCallback() {
+
+		@Override
+		public boolean reportFixture(Fixture fixture) {
+			if (!onDynamicCallback(fixture)) {
+				return true;
+			}
+			affectedFixtures.add(fixture);
+			if (fixture.getUserData() instanceof LightData) {
+				LightData data = (LightData) fixture.getUserData();
+				data.shadowsDropped++;
+			}
+			return true;
+		}
+
+	};
 
 }

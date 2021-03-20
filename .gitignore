@@ -2,6 +2,8 @@
 .project
 .settings/
 .idea/
+.gradle/
+build/
 libs/
 target/
 *.class

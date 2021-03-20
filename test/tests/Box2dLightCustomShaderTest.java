@@ -110,13 +110,13 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		normalProjection.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		/** BOX2D LIGHT STUFF BEGIN */
-		RayHandler.setGammaCorrection(true);
-		RayHandler.useDiffuseLight(true);
-
 		normalShader = createNormalShader();
 
 		lightShader = createLightShader();
-		rayHandler = new RayHandler(world, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()) {
+		RayHandlerOptions options = new RayHandlerOptions();
+		options.setDiffuse(true);
+		options.setGammaCorrection(true);
+		rayHandler = new RayHandler(world, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), options) {
 			@Override protected void updateLightShader () {}
 
 			@Override protected void updateLightShaderPerLight (Light light) {

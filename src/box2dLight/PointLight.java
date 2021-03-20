@@ -1,7 +1,12 @@
 package box2dLight;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.physics.box2d.*;
 
 /**
  * Light shaped as a circle with given radius
@@ -50,6 +55,11 @@ public class PointLight extends PositionalLight {
 	
 	@Override
 	public void update () {
+		if (rayHandler.pseudo3d) {
+			prepareFixtureData();
+			updateDynamicShadowMeshes();
+		}
+
 		updateBody();
 		if (dirty) setEndPoints();
 		
@@ -59,7 +69,7 @@ public class PointLight extends PositionalLight {
 		dirty = false;
 		updateMesh();
 	}
-	
+
 	/**
 	 * Sets light distance
 	 * 

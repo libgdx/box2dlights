@@ -15,7 +15,7 @@ public class DiffuseShader {
 				+ "   gl_Position = a_position;\n" //
 				+ "}\n";
 
-		// this is allways perfect precision
+		// this is always perfect precision
 		final String fragmentShader = "#ifdef GL_ES\n" //
 				+ "precision lowp float;\n" //
 				+ "#define MED mediump\n"				

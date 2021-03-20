@@ -15,7 +15,7 @@ public class DesktopLauncher {
 		config.vSyncEnabled = true;
 
 		config.fullscreen = false;
-		new LwjglApplication(new Box2dLightTest(), config);
+		new LwjglApplication(new Box2dLightTest2(), config);
 	}
 
 }
