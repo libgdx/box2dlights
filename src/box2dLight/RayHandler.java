@@ -30,11 +30,18 @@ public class RayHandler implements Disposable {
 	static boolean gammaCorrection = false;
 	static float gammaCorrectionParameter = 1f;
 
-	/** if this is public why we have a setter?
-	 * TODO: remove public modifier and add getter 
-	 * */
-	public static boolean isDiffuse = false;
+	/**
+	 * TODO: This could be made adaptive to ratio of camera sizes * zoom vs the
+	 * CircleShape radius - thus will provide smooth radial shadows while
+	 * resizing and zooming in and out
+	 */
+	static int CIRCLE_APPROX_POINTS = 32;
 
+	static float dynamicShadowColorReduction = 1;
+
+	static int MAX_SHADOW_VERTICES = 64;
+
+	static boolean isDiffuse = false;
 	/**
 	 * Blend function for lights rendering with both shadows and diffusion
 	 * <p>Default: (GL20.GL_DST_COLOR, GL20.GL_ZERO)
@@ -80,7 +87,11 @@ public class RayHandler implements Disposable {
 	boolean culling = true;
 	boolean shadows = true;
 	boolean blur = true;
-	
+
+	/** Experimental mode */
+	boolean pseudo3d = false;
+	boolean shadowColorInterpolation = false;
+
 	int blurNum = 1;
 	
 	boolean customViewport = false;
@@ -113,11 +124,16 @@ public class RayHandler implements Disposable {
 	 *     <li>ambientLight = 0f
 	 * </ul>
 	 * 
-	 * @see #RayHandler(World, int, int)
+	 * @see #RayHandler(World, int, int, RayHandlerOptions)
 	 */
 	public RayHandler(World world) {
 		this(world, Gdx.graphics.getWidth() / 4, Gdx.graphics
-				.getHeight() / 4);
+				.getHeight() / 4, null);
+	}
+
+	public RayHandler(World world, RayHandlerOptions options) {
+		this(world, Gdx.graphics.getWidth() / 4, Gdx.graphics
+				.getHeight() / 4, options);
 	}
 
 	/**
@@ -127,7 +143,18 @@ public class RayHandler implements Disposable {
 	 * @see #RayHandler(World)
 	 */
 	public RayHandler(World world, int fboWidth, int fboHeight) {
+		this(world, fboWidth, fboHeight, null);
+	}
+
+	public RayHandler(World world, int fboWidth, int fboHeight, RayHandlerOptions options) {
 		this.world = world;
+
+		if (options != null) {
+			isDiffuse = options.isDiffuse;
+			gammaCorrection = options.gammaCorrection;
+			pseudo3d = options.pseudo3d;
+			shadowColorInterpolation = options.shadowColorInterpolation;
+		}
 
 		resizeFBO(fboWidth, fboHeight);
 		lightShader = LightShader.createLightShader();
@@ -300,7 +327,6 @@ public class RayHandler implements Disposable {
 
 		Gdx.gl.glDepthMask(false);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
-		simpleBlendFunc.apply();
 
 		boolean useLightMap = (shadows || blur);
 		if (useLightMap) {
@@ -309,17 +335,20 @@ public class RayHandler implements Disposable {
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		}
 
+		simpleBlendFunc.apply();
+
 		ShaderProgram shader = customLightShader != null ? customLightShader : lightShader;
-		shader.begin();
+		shader.bind();
 		{
+			lightShader.setUniformMatrix("u_projTrans", combined);
 			shader.setUniformMatrix("u_projTrans", combined);
 			if (customLightShader != null) updateLightShader();
+
 			for (Light light : lightList) {
 				if (customLightShader != null) updateLightShaderPerLight(light);
 				light.render();
 			}
 		}
-		shader.end();
 
 		if (useLightMap) {
 			if (customViewport) {
@@ -331,12 +360,34 @@ public class RayHandler implements Disposable {
 			} else {
 				lightMap.frameBuffer.end();
 			}
-
-			boolean needed = lightRenderedLastFrame > 0;
-			// this way lot less binding
-			if (needed && blur)
-				lightMap.gaussianBlur();
 		}
+
+		if (useLightMap && pseudo3d) {
+			lightMap.shadowBuffer.begin();
+			Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+			for (Light light : lightList) {
+				light.dynamicShadowRender();
+			}
+
+			if (customViewport) {
+				lightMap.shadowBuffer.end(
+						viewportX,
+						viewportY,
+						viewportWidth,
+						viewportHeight);
+			} else {
+				lightMap.shadowBuffer.end();
+			}
+		}
+
+		boolean needed = lightRenderedLastFrame > 0;
+		// this way lot less binding
+		if (needed && blur)
+			lightMap.gaussianBlur(lightMap.frameBuffer, blurNum);
+		if (needed && blur && pseudo3d)
+			lightMap.gaussianBlur(lightMap.shadowBuffer, blurNum);
 	}
 
 	/**
@@ -571,9 +622,10 @@ public class RayHandler implements Disposable {
 	 * <p>NOTE: To match the visuals with gamma uncorrected lights the light
 	 * distance parameters is modified implicitly.
 	 */
-	public static void setGammaCorrection(boolean gammaCorrectionWanted) {
+	public void applyGammaCorrection(boolean gammaCorrectionWanted) {
 		gammaCorrection = gammaCorrectionWanted;
 		gammaCorrectionParameter = gammaCorrection ? GAMMA_COR : 1f;
+		lightMap.createShaders();
 	}
 
 	/**
@@ -583,10 +635,35 @@ public class RayHandler implements Disposable {
 	 * more realistic model than normally used as it preserve colors but might
 	 * look bit darker and also it might improve performance slightly.
 	 */
-	public static void useDiffuseLight(boolean useDiffuse) {
+	public void setDiffuseLight(boolean useDiffuse) {
 		isDiffuse = useDiffuse;
+		lightMap.createShaders();
 	}
-	
+
+	public static boolean isDiffuseLight() {
+		return isDiffuse;
+	}
+
+	public static float getDynamicShadowColorReduction () {
+		return dynamicShadowColorReduction;
+	}
+
+	/**
+	 * Static setters are deprecated, use {@link RayHandlerOptions}
+	 */
+	@Deprecated
+	public static void useDiffuseLight(boolean useDiffuse) {
+
+	}
+
+	/**
+	 * Static setters are deprecated, use {@link RayHandlerOptions}
+	 */
+	@Deprecated
+	public static void setGammaCorrection(boolean gammaCorrectionWanted) {
+
+	}
+
 	/**
 	 * Sets rendering to custom viewport with specified position and size
 	 * <p>Note: you will be responsible for update of viewport via this method
@@ -607,6 +684,28 @@ public class RayHandler implements Disposable {
 	 */
 	public void useDefaultViewport() {
 		customViewport = false;
+	}
+
+	/**
+	 * /!\ Experimental mode with dynamic shadowing in pseudo-3d world
+	 *
+	 * @param flag enable pseudo 3d effect
+	 */
+	public void setPseudo3dLight(boolean flag) {
+		setPseudo3dLight(flag, false);
+	}
+
+	/**
+	 * /!\ Experimental mode with dynamic shadowing in pseudo-3d world
+	 *
+	 * @param flag enable pseudo 3d effect
+	 * @param interpolateShadows interpolate shadow color
+	 */
+	public void setPseudo3dLight(boolean flag, boolean interpolateShadows) {
+		pseudo3d = flag;
+		shadowColorInterpolation = interpolateShadows;
+
+		lightMap.createShaders();
 	}
 
 	/**
@@ -641,5 +740,4 @@ public class RayHandler implements Disposable {
 	public FrameBuffer getLightMapBuffer() {
 		return lightMap.frameBuffer;
 	}
-	
 }
