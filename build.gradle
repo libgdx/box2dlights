@@ -7,6 +7,9 @@ sourceSets {
 		java {
 			srcDirs = ["src"]
 		}
+		resources {
+			srcDirs = ["res"]
+		}
 	}
 	test {
 		java {
@@ -15,11 +18,53 @@ sourceSets {
 	}
 }
 
-ext.gdxVersion = "1.9.11"
-version = "1.6-SNAPSHOT"
+ext {
+	gdxVersion = "1.9.11"
+
+	isReleaseBuild = {
+		return project.hasProperty("RELEASE")
+	}
+
+	getReleaseRepositoryUrl = {
+		return project.hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+				: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+	}
+
+	getSnapshotRepositoryUrl = {
+		return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+				: "https://oss.sonatype.org/content/repositories/snapshots/"
+	}
+
+	getRepositoryUsername = {
+		return project.hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+	}
+
+	getRepositoryPassword = {
+		return project.hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+	}
+}
+
+version project.getProperty('version') + (isReleaseBuild() ? "" : "-SNAPSHOT")
+
+java {
+	sourceCompatibility = 1.7
+	targetCompatibility = 1.7
+
+	withJavadocJar()
+	withSourcesJar()
+}
 
 repositories {
+	mavenLocal()
 	mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+	systemProperty 'file.encoding', 'UTF-8'
 }
 
 dependencies {
@@ -29,3 +74,5 @@ dependencies {
 	testImplementation "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
 	testImplementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 }
+
+apply from: rootProject.file('publish.gradle')
