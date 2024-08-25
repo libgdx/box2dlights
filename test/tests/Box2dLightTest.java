@@ -89,8 +89,8 @@ public class Box2dLightTest extends InputAdapter implements ApplicationListener 
 		font.setColor(Color.RED);
 		
 		textureRegion = new TextureRegion(new Texture(
-				Gdx.files.internal("data/marble.png")));
-		bg = new Texture(Gdx.files.internal("data/bg.png"));
+				Gdx.files.internal("test/data/marble.png")));
+		bg = new Texture(Gdx.files.internal("test/data/bg.png"));
 
 		createPhysicsWorld();
 		Gdx.input.setInputProcessor(this);
