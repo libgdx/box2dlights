@@ -80,8 +80,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
 	@Override
 	public void create() {
-		bg = new Texture(Gdx.files.internal("data/bg-deferred.png"));
-		bgN = new Texture(Gdx.files.internal("data/bg-deferred-n.png"));
+		bg = new Texture(Gdx.files.internal("test/data/bg-deferred.png"));
+		bgN = new Texture(Gdx.files.internal("test/data/bg-deferred-n.png"));
 
 		MathUtils.random.setSeed(Long.MIN_VALUE);
 
@@ -95,10 +95,10 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		font.setColor(Color.RED);
 
 		TextureRegion marbleD = new TextureRegion(new Texture(
-			Gdx.files.internal("data/marble.png")));
+			Gdx.files.internal("test/data/marble.png")));
 
 		TextureRegion marbleN = new TextureRegion(new Texture(
-			Gdx.files.internal("data/marble-n.png")));
+			Gdx.files.internal("test/data/marble-n.png")));
 
 		marble = new DeferredObject(marbleD, marbleN);
 		marble.width = RADIUS * 2;
@@ -135,8 +135,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 		/** BOX2D LIGHT STUFF END */
 
 
-		objectReg = new TextureRegion(new Texture(Gdx.files.internal("data/object-deferred.png")));
-		objectRegN = new TextureRegion(new Texture(Gdx.files.internal("data/object-deferred-n.png")));
+		objectReg = new TextureRegion(new Texture(Gdx.files.internal("test/data/object-deferred.png")));
+		objectRegN = new TextureRegion(new Texture(Gdx.files.internal("test/data/object-deferred-n.png")));
 
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 3; y++) {
