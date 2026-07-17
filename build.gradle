@@ -19,7 +19,7 @@ sourceSets {
 }
 
 ext {
-	gdxVersion = "1.14.0"
+	gdxVersion = "1.14.2"
 
 	isReleaseBuild = {
 		return project.hasProperty("RELEASE")

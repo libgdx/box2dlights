@@ -1,3 +1,8 @@
+[1.7]
+- Updated libGDX to 1.4.2.
+- Fixed the tests so they build with the current libGDX; this only needed the scrolled() input method changed.
+- Updated Gradle to 8.14.5.
+
 [1.6]
 - Updated libGDX to 1.4.0, fixing a breaking change.
 - StringBuilder from libGDX has been replaced with StringBuilder from the JDK.
