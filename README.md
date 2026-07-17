@@ -7,7 +7,7 @@
 
 [![screenshot](http://img.youtube.com/vi/lfT8ajGbzk0/0.jpg)](http://www.youtube.com/watch?v=lfT8ajGbzk0)
 
-Kalle Hameleinen's Box2DLights is a 2D lighting framework that uses [box2d](http://box2d.org/) for raycasting and OpenGL ES 2.0 for rendering. This library is intended to be used with [libgdx](http://libgdx.com).
+Kalle Hameleinen's Box2DLights is a 2D lighting framework that uses [box2d](http://box2d.org/) for raycasting and OpenGL ES 2.0 for rendering. This library is intended to be used with [libGDX](http://libgdx.com).
 
 Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android) to see the library in action.
 
@@ -20,14 +20,15 @@ Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android
  * Directional Light
  * Chain Light [New in 1.3]
  * Shadows
- * Dynamic/static/xray light
+ * Dynamic/static/X-ray light
  * Culling
  * Colored ambient light
- * Gamma corrected colors
+ * Gamma-corrected colors
  * Handler class to do all the work
- * Query method for testing is point inside of light/shadow
+ * Query method for testing if a point is inside a light/shadow
 
-This library offer easy way to add soft dynamic 2d lights to your physic based game. Rendering use libgdx, but it would be easy to port this to other frameworks or pure openGl too.
+This library offers an easy way to add soft dynamic 2d lights to your physics-based game. Rendering uses libGDX, but it
+would be easy to port this to other frameworks or pure OpenGl too.
 
 ## Usage
 
@@ -60,6 +61,12 @@ While the stable release for libGDX 1.13.5 and earlier uses:
 
 Information for other build tools with JitPack is [available here](https://jitpack.io/#libgdx/box2dlights/76536bb895).
 
+If the given JitPack dependency isn't compatible with libGDX 1.14.2 or newer, you can change `76536bb895` to
+`fb5cd9f8f5` to use version 1.7, which only updates libGDX to 1.14.2 and fixes some tests. The tests shouldn't apply to
+JitPack's build at all, so version 1.6 (with commit hash `76536bb895`) *should* still be compatible with the latest
+libGDX. If it isn't for any reason, version 1.7 (with commit hash `fb5cd9f8f5`) has been tested with libGDX 1.14.2 as
+the only libGDX version present, and that works.
+
 The stable release JARs were at one point hosted on the badlogicgames site, but it's been offline for some time. Using
 Gradle or another similar tool is encouraged, but if you need to download JARs for any reason, you still can download
 individual JARs manually from Maven Central or even from JitPack.
@@ -67,5 +74,8 @@ individual JARs manually from Maven Central or even from JitPack.
 for example, from JitPack directly.
 
 ## Maintenance Note
-Box2dlights was moved from Google Code to GitHub to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
+Box2dlights was moved from Google Code to GitHub to make contributing easier.
+The libGDX team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libGDX version.
+
+... Well, @tommyettinger seems to be ensuring compatibility with the latest libGDX version.
 
