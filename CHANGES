@@ -1,5 +1,9 @@
+[1.6]
+- Updated libGDX to 1.4.0, fixing a breaking change.
+- StringBuilder from libGDX has been replaced with StringBuilder from the JDK.
+
 [1.5]
-- Added abitility render lights in frame buffer objects
+- Added ability to render lights in frame buffer objects
 - Fixed Shader compilation problems on ATI graphic cards
 - Fixed ChainLight.update and .render access (now public as should)
 - Changed Lights soft shadow length to distance * 0.1 on creation

@@ -30,21 +30,41 @@ Try Kalle's game [Boxtrix](https://market.android.com/details?id=boxtrix.android
 This library offer easy way to add soft dynamic 2d lights to your physic based game. Rendering use libgdx, but it would be easy to port this to other frameworks or pure openGl too.
 
 ## Usage
- * Download the [latest Box2DLights release](http://libgdx.badlogicgames.com/box2dlights/)
- * Add the box2dlights.jar file to your libgdx core project's classpath
- * Check out the [Wiki](https://github.com/libgdx/box2dlights/wiki)
 
-Box2DLights is also available in Maven Central. Add the following dependency to your libgdx core project:
+Check out the [Wiki](https://github.com/libgdx/box2dlights/wiki) for usage information.
+
+If you use Gradle, add the following dependency to your build.gradle file, in the last dependencies block of core/build.gradle:
+
+     implementation 'com.github.libgdx:box2dlights:76536bb895'
+
+That dependency uses JitPack to depend on the only commit in the 1.6 version, which makes box2dlights compatible with
+libGDX 1.14.0 . If you use a earlier libGDX version, you can depend on the stable release 1.5 from Maven Central:
+
+     implementation "com.badlogicgames.box2dlights:box2dlights:1.5"
+
+If you use Maven, the JitPack 1.6 dependency uses:
+
+	<dependency>
+	    <groupId>com.github.libgdx</groupId>
+	    <artifactId>box2dlights</artifactId>
+	    <version>76536bb895</version>
+	</dependency>
+
+While the stable release for libGDX 1.13.5 and earlier uses: 
 
     <dependency>
       <groupId>com.badlogicgames.box2dlights</groupId>
       <artifactId>box2dlights</artifactId>
       <version>1.5</version>
     </dependency>
-    
-If you use Gradle, add the following dependency to your build.gradle file, in the dependencies block of the core project:
 
-     implementation "com.badlogicgames.box2dlights:box2dlights:1.5"
+Information for other build tools with JitPack is [available here](https://jitpack.io/#libgdx/box2dlights/76536bb895).
+
+The stable release JARs were at one point hosted on the badlogicgames site, but it's been offline for some time. Using
+Gradle or another similar tool is encouraged, but if you need to download JARs for any reason, you still can download
+individual JARs manually from Maven Central or even from JitPack.
+[Here's the JAR that is compatible with libGDX 1.14.0](https://jitpack.io/com/github/libgdx/box2dlights/76536bb895/box2dlights-76536bb895.jar),
+for example, from JitPack directly.
 
 ## Maintenance Note
 Box2dlights was moved from Google Code to GitHub to make contributing easier. The libgdx team will happily merge pull requests but will not fix bugs or ensure compatibility with the latest libgdx version.
